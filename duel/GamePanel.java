@@ -72,17 +72,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    }
    // Updates positions of game objects
    public void move() {
-       // Only move if specific keys are pressed
-       if (wPressed) {
-           playerLeft.setYDirection(-1);
-       } else if (!wPressed) {
-           playerLeft.setYDirection(1);
-       }
-       if (upPressed) {
-           playerRight.setYDirection(-1);
-       } else if (!upPressed) {
-           playerRight.setYDirection(1);
-       }
        playerLeft.move();
        playerRight.move();
        // Move bullets

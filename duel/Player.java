@@ -17,7 +17,7 @@ public class Player extends Rectangle {
    private int yVelocity; // Current vertical velocity
    private boolean isMoving; // Current movement state
    private int movementDirection; // Current movement direction (1 for down, -1 for up)
-   private boolean hasGun; // Whether player currently possesses a gun
+   private boolean hasGun = true; // Whether player currently possesses a gun
   
    // Shooting-related variables
    private static final long SHOOT_PAUSE_DURATION = 250; // Milliseconds to pause when shooting
@@ -49,23 +49,29 @@ public class Player extends Rectangle {
     * Respects movement state, direction, and screen limits
     */
    public void move() {
-       if (!isMoving) return; // Stop movement if paused
+       if (!isMoving){
+        return;
+       } // Stop movement if paused
        y += yVelocity;
        // Boundary checks with direction reversal
        if (y < 0) {
            y = 0;
            movementDirection *= -1; // Reverse direction at top
            yVelocity = movementDirection * SPEED;
-       } else if (y > SCREEN_HEIGHT - height) {
+
+       }else if (y > SCREEN_HEIGHT - height) {
            y = SCREEN_HEIGHT - height;
-           movementDirection *= -1; // Reverse direction at bottom
+           movementDirection = movementDirection* -1; // Reverse direction at bottom
            yVelocity = movementDirection * SPEED;
+           
        }
    }
    // Handles shoot action based on gun possession
    public boolean shoot(long currentTime) {
+    
        // Check if enough time has passed since last shoot
        if (currentTime - lastShootTime < SHOOT_PAUSE_DURATION) {
+        
            return false;
        }
        if (hasGun) {
@@ -74,6 +80,7 @@ public class Player extends Rectangle {
            lastShootTime = currentTime;
            return true;
        } else {
+        
            // Without a gun, change movement direction
            movementDirection *= -1;
            yVelocity = movementDirection * SPEED;
@@ -95,8 +102,5 @@ public class Player extends Rectangle {
    // Getters and setters
    public void setHasGun(boolean hasGun) {
        this.hasGun = hasGun;
-   }
-   public boolean hasGun() {
-       return hasGun;
    }
 }
