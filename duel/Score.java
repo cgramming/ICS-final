@@ -3,7 +3,7 @@
 * Date: December 16, 2024
 * Description: Score class to track and manage player scores in Top-Down Duel
 */
-package duel;
+
 
 import java.awt.*;
 

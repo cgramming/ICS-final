@@ -4,7 +4,7 @@
 * Description: GamePanel class manages game objects, rendering,
 * and primary game loop for the Duel game.
 */
-package duel;
+
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;

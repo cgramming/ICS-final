@@ -5,7 +5,7 @@
 * It initializes and embeds the GamePanel constructor, configures the frame's properties,
 * and ensures the window is displayed at the center of the screen.
 */
-package duel;
+
 import java.awt.*;
 import javax.swing.*;
 public class GameFrame extends JFrame {

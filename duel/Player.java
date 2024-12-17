@@ -6,7 +6,7 @@
 * Supports directional movement and shooting interactions.
 * Now includes player-specific image rendering.
 */
-package duel;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;

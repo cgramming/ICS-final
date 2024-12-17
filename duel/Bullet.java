@@ -4,7 +4,7 @@
 * Description: Bullet class representing projectiles shot by players,
 * with directional movement and player-specific image rendering.
 */
-package duel;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;

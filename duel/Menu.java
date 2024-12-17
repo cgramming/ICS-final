@@ -4,7 +4,7 @@
  * Description: Menu class for Top-Down Duel game, managing start screen, 
  * tutorial, and game initialization.
  */
-package duel;
+
 
 import javax.swing.*;
 import java.awt.*;
