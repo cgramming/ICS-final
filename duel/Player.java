@@ -79,7 +79,6 @@ public class Player extends Rectangle {
     */
    public void move() {
        if (!isMoving){
-        
         return;
        } // Stop movement if paused
        y += yVelocity;
