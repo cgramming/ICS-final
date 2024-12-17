@@ -21,6 +21,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    public Player playerRight;
    public Bullet bulletLeft;
    public Bullet bulletRight;
+   public Score score;
    // Menu and game state
    public Menu menu;
    private boolean gameStarted = false;
@@ -41,6 +42,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT/2, 25, 100, GAME_HEIGHT, false);
        // Prepare game thread (but don't start)
        gameThread = new Thread(this);
+       score = new Score();
    }
    //Starts the game thread when game begins
    public void startGame() {
@@ -75,6 +77,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        if (bulletRight != null) {
            bulletRight.draw(g);
        }
+       // Draw scores
+       score.draw(g, GAME_WIDTH, GAME_HEIGHT);
    }
    // Updates positions of game objects
    public void move() {
@@ -98,14 +102,14 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    }
    // Checks and handles game object collisions
    public void checkCollision() {
-       // Check bullet collisions with players
+	   // Check bullet collisions with players and update scores
        if (bulletLeft != null && bulletLeft.collidesWith(playerRight)) {
+           score.scoreLeftPlayer(); // Left player scores
            bulletLeft = null;
-           // Additional hit logic can be added here
        }
        if (bulletRight != null && bulletRight.collidesWith(playerLeft)) {
+           score.scoreRightPlayer(); // Right player scores
            bulletRight = null;
-           // Additional hit logic can be added here
        }
    }
    // Primary game loop
