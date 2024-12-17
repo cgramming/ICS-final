@@ -12,7 +12,6 @@ import java.awt.event.*;
 
 public class Menu extends JPanel {
     // Menu components
-    private String title;
     private JButton start;
     private JButton tutorial;
     private JButton back;
