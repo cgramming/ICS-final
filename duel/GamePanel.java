@@ -24,9 +24,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    // Menu and game state
    public Menu menu;
    private boolean gameStarted = false;
-   // Keyboard state tracking
-   private boolean wPressed = false;
-   private boolean upPressed = false;
+   
    // Constructor initializes game panel and menu
    public GamePanel() {
        // Panel configuration
@@ -138,7 +136,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        // Existing key press logic
        switch(e.getKeyCode()) {
            case KeyEvent.VK_W:
-               wPressed = true;
                playerLeft.shoot(System.currentTimeMillis());
                if (bulletLeft == null) {
                    bulletLeft = new Bullet(playerLeft.x + playerLeft.width,
@@ -147,7 +144,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                }
                break;
            case KeyEvent.VK_UP:
-               upPressed = true;
                playerRight.shoot(System.currentTimeMillis());
                if (bulletRight == null) {
                    bulletRight = new Bullet(playerRight.x,
@@ -165,11 +161,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        }
        switch(e.getKeyCode()) {
            case KeyEvent.VK_W:
-               wPressed = false;
                playerLeft.resumeMovement(System.currentTimeMillis());
                break;
            case KeyEvent.VK_UP:
-               upPressed = false;
                playerRight.resumeMovement(System.currentTimeMillis());
                break;
        }
