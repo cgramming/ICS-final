@@ -11,7 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 
 public class Menu extends JPanel {
-    // UML Specified attributes
+    // Menu components
     private String title;
     private JButton start;
     private JButton tutorial;
