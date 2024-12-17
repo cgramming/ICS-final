@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: December 12, 2024
+* Date: December 16, 2024
 * Description: GamePanel class manages game objects, rendering,
 * and primary game loop for the Duel game.
 */
@@ -36,8 +36,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        addKeyListener(this);
        // Create menu first
        menu = new Menu(this);
-       this.setLayout(new BorderLayout());
-       this.add(menu, BorderLayout.CENTER);
+       setLayout(new BorderLayout());
+       add(menu, BorderLayout.CENTER);
        // Create players (but don't start game yet)
        playerLeft = new Player(50, GAME_HEIGHT/2, 25, 100, GAME_HEIGHT, false);
        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT/2, 25, 100, GAME_HEIGHT, false);
@@ -46,17 +46,25 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    }
    //Starts the game thread when game begins
    public void startGame() {
+       // Remove menu and show game
+       removeAll();
+       setLayout(new BorderLayout());
+       
        gameStarted = true;
-       menu.setVisible(false);
        this.requestFocusInWindow();
        gameThread.start();
    }
    // Paints the game components
    public void paint(Graphics g) {
-       image = createImage(getWidth(), getHeight());
-       graphics = image.getGraphics();
-       draw(graphics);
-       g.drawImage(image, 0, 0, this);
+       super.paint(g);
+       
+       // Only paint game objects if game has started
+       if (gameStarted) {
+           image = createImage(getWidth(), getHeight());
+           graphics = image.getGraphics();
+           draw(graphics);
+           g.drawImage(image, 0, 0, this);
+       }
    }
    // Draws all game objects
    public void draw(Graphics g) {
@@ -125,10 +133,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    public void keyPressed(KeyEvent e) {
        // Only process game keys if game has started
        if (!gameStarted) {
-           if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-               startGame();
-               return;
-           }
+           return;
        }
        // Existing key press logic
        switch(e.getKeyCode()) {
@@ -154,6 +159,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    }
    // Handles key release events
    public void keyReleased(KeyEvent e) {
+       // Only process game keys if game has started
+       if (!gameStarted) {
+           return;
+       }
        switch(e.getKeyCode()) {
            case KeyEvent.VK_W:
                wPressed = false;
