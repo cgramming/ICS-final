@@ -25,6 +25,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    // Menu and game state
    public Menu menu;
    private boolean gameStarted = false;
+   //Bullet Dimensions
+   int bulletWidth = 100;
+   int bulletHeight = 100;
    
    // Constructor initializes game panel and menu
    public GamePanel() {
@@ -144,7 +147,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                if (bulletLeft == null) {
                    bulletLeft = new Bullet(playerLeft.x + playerLeft.width,
                                            playerLeft.y + playerLeft.height/2,
-                                           20, 10, true);
+                                           bulletWidth, bulletHeight, true);
                }
                break;
            case KeyEvent.VK_UP:
@@ -152,7 +155,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                if (bulletRight == null) {
                    bulletRight = new Bullet(playerRight.x,
                                             playerRight.y + playerRight.height/2,
-                                            20, 10, false);
+                                            bulletWidth, bulletHeight, false);
                }
                break;
        }
