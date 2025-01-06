@@ -149,6 +149,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                                            playerLeft.y + playerLeft.height/2,
                                            bulletWidth, bulletHeight, true);
                }
+               playerLeft.setYDirection(0);
                break;
            case KeyEvent.VK_UP:
                playerRight.shoot(System.currentTimeMillis());
@@ -157,6 +158,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                                             playerRight.y + playerRight.height/2,
                                             bulletWidth, bulletHeight, false);
                }
+               playerRight.setYDirection(0);
                break;
        }
    }

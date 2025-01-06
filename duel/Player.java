@@ -35,7 +35,7 @@ public class Player extends Rectangle {
                  int screenHeight, boolean hasGun) {
        super(x, y, playerWidth, playerHeight);
        this.SCREEN_HEIGHT = screenHeight;
-       this.hasGun = hasGun;
+       this.hasGun = true;
        this.movementDirection = 1; // Default to downward movement
        this.isMoving = true; // Start in moving state
        this.yVelocity = SPEED; // Initial downward velocity
@@ -66,10 +66,11 @@ public class Player extends Rectangle {
     */
    public void setYDirection(int direction) {
        // Normalize direction to -1, 0, or 1
-       if (direction > 0) direction = 1;
-       if (direction < 0) direction = -1;
+       if (direction > 0) movementDirection = 1;
+       if (direction < 0) movementDirection = -1;
+       if (direction == 0) movementDirection = movementDirection *-1;
        // Update movement direction and velocity
-       movementDirection = direction;
+       System.out.println(movementDirection);
        yVelocity = direction * SPEED;
    }
    
@@ -78,7 +79,7 @@ public class Player extends Rectangle {
     * Respects movement state, direction, and screen limits
     */
    public void move() {
-       if (!isMoving){
+       if (isMoving == false){
         return;
        } // Stop movement if paused
        y += yVelocity;
@@ -98,16 +99,17 @@ public class Player extends Rectangle {
    
    // Handles shoot action based on gun possession
    public boolean shoot(long currentTime) {
-    
        // Check if enough time has passed since last shoot
        if (currentTime - lastShootTime < SHOOT_PAUSE_DURATION) {
-        
+           
            return false;
+           
        }
        if (hasGun) {
            // Pause movement momentarily when shooting with a gun
            isMoving = false;
            lastShootTime = currentTime;
+           hasGun = false;
            return true;
        } else {
         
@@ -123,6 +125,7 @@ public class Player extends Rectangle {
        if (!hasGun || currentTime - lastShootTime >= SHOOT_PAUSE_DURATION) {
            isMoving = true;
            yVelocity = movementDirection * SPEED;
+           hasGun = true;
        }
    }
    
