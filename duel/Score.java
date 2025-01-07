@@ -39,7 +39,7 @@ public class Score {
     // Draw scores on the screen
     public void draw(Graphics g, int screenWidth, int screenHeight) {
         g.setColor(Color.BLACK);
-        g.setFont(new Font("Arial", Font.BOLD, 24));
+        g.setFont(new Font("Arial", Font.BOLD, 40));
         
         // Format score as "LeftScore : RightScore"
         String scoreText = String.format("%d : %d", leftPlayerScore, rightPlayerScore);
@@ -48,10 +48,10 @@ public class Score {
         FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(scoreText);
         
-        // Draw score in top middle of screen
+        // Draw score at bottom of screen
         g.drawString(scoreText, 
                      (screenWidth - textWidth) / 2, 
-                     30);
+                     575);
     }
 
     // Reset scores for a new game
