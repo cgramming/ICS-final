@@ -30,7 +30,9 @@ public class Bullet extends Rectangle {
             // Load image based on which player shot the bullet
             String imageName = isFromLeftPlayer ? "bulletRight.png" : "bulletLeft.png";
             bulletImage = ImageIO.read(getClass().getResourceAsStream(imageName));
+            bulletImage = rotate(bulletImage, Math.toRadians(10));
             bulletImage = resize(bulletImage, x, y);
+            
         } catch (IOException | IllegalArgumentException e) {
             System.err.println("Error loading bullet image: " + e.getMessage());
             // Fallback to default color rendering if image fails to load
@@ -94,6 +96,14 @@ public class Bullet extends Rectangle {
         g2d.drawImage(tmp, 0, 0, null);
         g2d.dispose();
 
+        return dimg;
+    }
+    
+    public BufferedImage rotate(BufferedImage img, double rotation){
+        AffineTransform tx = AffineTransform.getRotateInstance(rotation,  img.getWidth()/2, img.getHeight()/2);
+        AffineTransformOp op = new AffineTransformOp(tx, AffineTransformOp.TYPE_BILINEAR);
+        BufferedImage dimg = op.filter(img, null);
+    
         return dimg;
     }
 
