@@ -32,8 +32,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    public Menu menu;
    private boolean gameStarted = false;
    // Bullet dimensions
-   int bulletWidth = 100;
-   int bulletHeight = 100;
+   int bulletWidth = 50;
+   int bulletHeight = 50;
    // Map management
    private MapManager mapManager;
    private BufferedImage backgroundImage;
