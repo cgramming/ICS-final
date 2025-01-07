@@ -9,8 +9,8 @@
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.io.IOException;
+import javax.imageio.ImageIO;
 public class Player extends Rectangle {
    // Movement and screen-related constants
    private final int SPEED = 5; // Base movement speed
@@ -70,7 +70,6 @@ public class Player extends Rectangle {
        if (direction < 0) movementDirection = -1;
        if (direction == 0) movementDirection = movementDirection *-1;
        // Update movement direction and velocity
-       System.out.println(movementDirection);
        yVelocity = direction * SPEED;
    }
    

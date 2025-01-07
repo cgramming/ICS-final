@@ -7,12 +7,12 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import javax.swing.*;
 import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
 import java.io.IOException;
-import java.util.Random;
 import java.util.ArrayList;
+import java.util.Random;
+import javax.imageio.ImageIO;
+import javax.swing.*;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
    // Screen dimensions
@@ -205,18 +205,34 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    // Checks and handles game object collisions
    public void checkCollision() {
 	    // Check bullet collisions with players
-	    if (bulletLeft != null && bulletLeft.collidesWith(playerRight)) {
-	        score.scoreLeftPlayer(); // Left player scores
-	        bulletLeft = null;
+	    if (bulletLeft != null) {
+	        if (bulletLeft.collidesWith(playerRight)) {
+	            score.scoreLeftPlayer(); // Left player scores
+	            bulletLeft = null;
+	        } else if (bulletLeft.collidesWith(playerLeft)) {
+	            score.scoreRightPlayer(); // Right player scores when left player hits themselves
+	            bulletLeft = null;
+	        }
 	    }
-	    if (bulletRight != null && bulletRight.collidesWith(playerLeft)) {
-	        score.scoreRightPlayer(); // Right player scores
-	        bulletRight = null;
+	    
+	    if (bulletRight != null) {
+	        if (bulletRight.collidesWith(playerLeft)) {
+	            score.scoreRightPlayer(); // Right player scores
+	            bulletRight = null;
+	        } else if (bulletRight.collidesWith(playerRight)) {
+	            score.scoreLeftPlayer(); // Left player scores when right player hits themselves
+	            bulletRight = null;
+	        }
 	    }
 
 	    // Check bullet collisions with obstacles
 	    for (Point obstaclePosition : obstaclePositions) {
-	        Rectangle obstacleBounds = new Rectangle(obstaclePosition.x, obstaclePosition.y, obstacleImage.getWidth(), obstacleImage.getHeight());
+	        Rectangle obstacleBounds = new Rectangle(
+	            obstaclePosition.x, 
+	            obstaclePosition.y, 
+	            obstacleImage.getWidth(), 
+	            obstacleImage.getHeight()
+	        );
 
 	        if (bulletLeft != null && bulletLeft.getBounds().intersects(obstacleBounds)) {
 	            bulletLeft.bounceOffObstacle(obstacleBounds);
@@ -263,32 +279,38 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    }
    // Handles key press events
    public void keyPressed(KeyEvent e) {
-       // Only process game keys if game has started
-       if (!gameStarted) {
-           return;
-       }
-       // Existing key press logic
-       switch(e.getKeyCode()) {
-           case KeyEvent.VK_W:
-               playerLeft.shoot(System.currentTimeMillis());
-               if (bulletLeft == null) {
-                   bulletLeft = new Bullet(playerLeft.x + playerLeft.width,
-                                           playerLeft.y + playerLeft.height/2,
-                                           bulletWidth, bulletHeight, true);
-               }
-               playerLeft.setYDirection(0);
-               break;
-           case KeyEvent.VK_UP:
-               playerRight.shoot(System.currentTimeMillis());
-               if (bulletRight == null) {
-                   bulletRight = new Bullet(playerRight.x,
-                                            playerRight.y + playerRight.height/2,
-                                            bulletWidth, bulletHeight, false);
-               }
-               playerRight.setYDirection(0);
-               break;
-       }
-   }
+	    // Only process game keys if game has started
+	    if (!gameStarted) {
+	        return;
+	    }
+	    
+	    switch(e.getKeyCode()) {
+	        case KeyEvent.VK_W:
+	            playerLeft.shoot(System.currentTimeMillis());
+	            if (bulletLeft == null) {
+	                bulletLeft = new Bullet(
+	                    playerLeft.x + playerLeft.width,  // Start at right edge of left player
+	                    playerLeft.y + playerLeft.height/2,
+	                    bulletWidth, bulletHeight, 
+	                    true
+	                );
+	            }
+	            playerLeft.setYDirection(0);
+	            break;
+	        case KeyEvent.VK_UP:
+	            playerRight.shoot(System.currentTimeMillis());
+	            if (bulletRight == null) {
+	                bulletRight = new Bullet(
+	                    playerRight.x - bulletWidth,  // Start at left edge of right player
+	                    playerRight.y + playerRight.height/2,
+	                    bulletWidth, bulletHeight, 
+	                    false
+	                );
+	            }
+	            playerRight.setYDirection(0);
+	            break;
+	    }
+	}
    // Handles key release events
    public void keyReleased(KeyEvent e) {
        // Only process game keys if game has started
