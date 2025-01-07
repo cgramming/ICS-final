@@ -8,6 +8,12 @@
 import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.util.Random;
+import java.util.ArrayList;
+
 public class GamePanel extends JPanel implements Runnable, KeyListener {
    // Screen dimensions
    public static final int GAME_WIDTH = 1000;
@@ -25,27 +31,47 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    // Menu and game state
    public Menu menu;
    private boolean gameStarted = false;
-   //Bullet Dimensions
+   // Bullet dimensions
    int bulletWidth = 100;
    int bulletHeight = 100;
+   // Map management
+   private MapManager mapManager;
+   private BufferedImage backgroundImage;
+   private BufferedImage obstacleImage;
+   // Variables to randomize obstacles
+   private ArrayList<Point> obstaclePositions;
+   private Random random;
    
    // Constructor initializes game panel and menu
    public GamePanel() {
+       // Initialize Random first
+       random = new Random();
+       
+       // Initialize map manager and load assets
+       mapManager = new MapManager();
+       obstaclePositions = new ArrayList<>();
+       
        // Panel configuration
        setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
        setBackground(Color.WHITE);
        setFocusable(true);
        addKeyListener(this);
+       
        // Create menu first
        menu = new Menu(this);
        setLayout(new BorderLayout());
        add(menu, BorderLayout.CENTER);
-       // Create players (but don't start game yet)
+       
+       // Create players
        playerLeft = new Player(50, GAME_HEIGHT/2, 25, 100, GAME_HEIGHT, false);
        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT/2, 25, 100, GAME_HEIGHT, false);
-       // Prepare game thread (but don't start)
-       gameThread = new Thread(this);
+       
+       // Initialize score and thread
        score = new Score();
+       gameThread = new Thread(this);
+       
+       // Load map assets (which will also generate obstacle positions)
+       loadMapAssets();
    }
    //Starts the game thread when game begins
    public void startGame() {
@@ -71,17 +97,76 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    }
    // Draws all game objects
    public void draw(Graphics g) {
+       // Draw background
+       if (backgroundImage != null) {
+           g.drawImage(backgroundImage, 0, 0, GAME_WIDTH, GAME_HEIGHT, null);
+       } else {
+           g.setColor(Color.WHITE);
+           g.fillRect(0, 0, GAME_WIDTH, GAME_HEIGHT);
+       }
+       
+       // Draw obstacles
+       if (obstacleImage != null && obstaclePositions != null) {
+           for (Point p : obstaclePositions) {
+               g.drawImage(obstacleImage, p.x, p.y, null);
+           }
+       }
+       
+       // Draw game objects
        playerLeft.draw(g);
        playerRight.draw(g);
-       // Draw bullets if they exist
        if (bulletLeft != null) {
            bulletLeft.draw(g);
        }
        if (bulletRight != null) {
            bulletRight.draw(g);
        }
-       // Draw scores
        score.draw(g, GAME_WIDTH, GAME_HEIGHT);
+   }
+   // Load map assets
+   private void loadMapAssets() {
+       try {
+           // Load images
+           backgroundImage = ImageIO.read(
+               getClass().getResourceAsStream(mapManager.getBackgroundImage())
+           );
+           obstacleImage = ImageIO.read(
+               getClass().getResourceAsStream(mapManager.getObstacleImage())
+           );
+           
+           // Generate positions after images are loaded
+           generateObstaclePositions();
+           
+       } catch (IOException e) {
+           System.err.println("Error loading map assets: " + e.getMessage());
+           backgroundImage = null;
+           obstacleImage = null;
+       }
+   }
+   
+   // Generate random positions for obstacles to spawn in
+   private void generateObstaclePositions() {
+       // Clear existing positions
+       obstaclePositions.clear();
+       
+       // Only generate positions if a valid obstacle image is present
+       if (obstacleImage != null) {
+           // Calculate boundaries for obstacle placement
+           int middleStart = GAME_WIDTH / 4;  // 25% from left
+           int middleWidth = GAME_WIDTH / 2;  // 50% of screen width
+           int topMargin = (int)(GAME_HEIGHT * 0.1);  // 10% from top
+           int usableHeight = GAME_HEIGHT - (2 * topMargin);  // Excluding top and bottom 10%
+           
+           // Number of obstacles to generate
+           int numObstacles = 5;
+           
+           // Generate positions
+           for (int i = 0; i < numObstacles; i++) {
+               int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
+               int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
+               obstaclePositions.add(new Point(x, y));
+           }
+       }
    }
    // Updates positions of game objects
    public void move() {
@@ -133,6 +218,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                delta--;
            }
        }
+   }
+   // Method to reset the game/map
+   public void resetGame() {
+       score.reset();
+       mapManager.randomizeMap();
+       loadMapAssets();
+       
+       playerLeft = new Player(50, GAME_HEIGHT/2, 25, 100, GAME_HEIGHT, false);
+       playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT/2, 25, 100, GAME_HEIGHT, false);
+       
+       bulletLeft = null;
+       bulletRight = null;
+       
+       repaint();
    }
    // Handles key press events
    public void keyPressed(KeyEvent e) {
