@@ -204,16 +204,30 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    }
    // Checks and handles game object collisions
    public void checkCollision() {
-	   // Check bullet collisions with players and update scores
-       if (bulletLeft != null && bulletLeft.collidesWith(playerRight)) {
-           score.scoreLeftPlayer(); // Left player scores
-           bulletLeft = null;
-       }
-       if (bulletRight != null && bulletRight.collidesWith(playerLeft)) {
-           score.scoreRightPlayer(); // Right player scores
-           bulletRight = null;
-       }
-   }
+	    // Check bullet collisions with players
+	    if (bulletLeft != null && bulletLeft.collidesWith(playerRight)) {
+	        score.scoreLeftPlayer(); // Left player scores
+	        bulletLeft = null;
+	    }
+	    if (bulletRight != null && bulletRight.collidesWith(playerLeft)) {
+	        score.scoreRightPlayer(); // Right player scores
+	        bulletRight = null;
+	    }
+
+	    // Check bullet collisions with obstacles
+	    for (Point obstaclePosition : obstaclePositions) {
+	        Rectangle obstacleBounds = new Rectangle(obstaclePosition.x, obstaclePosition.y, obstacleImage.getWidth(), obstacleImage.getHeight());
+
+	        if (bulletLeft != null && bulletLeft.getBounds().intersects(obstacleBounds)) {
+	            bulletLeft.bounceOffObstacle(obstacleBounds);
+	        }
+
+	        if (bulletRight != null && bulletRight.getBounds().intersects(obstacleBounds)) {
+	            bulletRight.bounceOffObstacle(obstacleBounds);
+	        }
+	    }
+	}
+
    // Primary game loop
    public void run() {
        // Game loop
