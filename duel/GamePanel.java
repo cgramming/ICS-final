@@ -146,28 +146,42 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    
    // Generate random positions for obstacles to spawn in
    private void generateObstaclePositions() {
-       // Clear existing positions
-       obstaclePositions.clear();
-       
-       // Only generate positions if a valid obstacle image is present
-       if (obstacleImage != null) {
-           // Calculate boundaries for obstacle placement
-           int middleStart = GAME_WIDTH / 4;  // 25% from left
-           int middleWidth = GAME_WIDTH / 2;  // 50% of screen width
-           int topMargin = (int)(GAME_HEIGHT * 0.1);  // 10% from top
-           int usableHeight = GAME_HEIGHT - (2 * topMargin);  // Excluding top and bottom 10%
-           
-           // Number of obstacles to generate
-           int numObstacles = 5;
-           
-           // Generate positions
-           for (int i = 0; i < numObstacles; i++) {
-               int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
-               int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
-               obstaclePositions.add(new Point(x, y));
-           }
-       }
-   }
+	    // Clear existing positions
+	    obstaclePositions.clear();
+
+	    if (obstacleImage != null) {
+	        int middleStart = GAME_WIDTH / 4;
+	        int middleWidth = GAME_WIDTH / 2;
+	        int topMargin = (int) (GAME_HEIGHT * 0.1);
+	        int usableHeight = GAME_HEIGHT - (2 * topMargin);
+	        int numObstacles = 5;
+
+	        for (int i = 0; i < numObstacles; i++) {
+	            Point newPoint;
+	            boolean overlaps;
+	            int attempts = 0;
+	            do {
+	                int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
+	                int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
+	                newPoint = new Point(x, y);
+	                overlaps = false;
+
+	                // Check for overlap with existing obstacles
+	                for (Point existing : obstaclePositions) {
+	                    if (new Rectangle(newPoint.x, newPoint.y, obstacleImage.getWidth(), obstacleImage.getHeight())
+	                        .intersects(new Rectangle(existing.x, existing.y, obstacleImage.getWidth(), obstacleImage.getHeight()))) {
+	                        overlaps = true;
+	                        break;
+	                    }
+	                }
+	                attempts++;
+	            } while (overlaps && attempts < 10); // Limit attempts to avoid infinite loops
+
+	            obstaclePositions.add(newPoint);
+	        }
+	    }
+	}
+
    // Updates positions of game objects
    public void move() {
        playerLeft.move();
