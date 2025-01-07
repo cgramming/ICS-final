@@ -48,7 +48,7 @@ public class Score {
         FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(scoreText);
         
-        // Draw score at bottom of screen
+        // Draw score in top middle of screen
         g.drawString(scoreText, 
                      (screenWidth - textWidth) / 2, 
                      575);
