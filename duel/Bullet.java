@@ -1,3 +1,10 @@
+/*
+* Swapnil Kabir and Syed Bazif Shah
+* Date: December 13, 2024
+* Description: Bullet class representing projectiles shot by players,
+* with directional movement and player-specific image rendering.
+*/
+
 import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
