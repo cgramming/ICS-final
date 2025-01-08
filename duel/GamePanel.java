@@ -41,6 +41,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    private static final long BULLET_RESET_DELAY = 1000; // 1 second delay
    private boolean canShoot = true;
    private boolean leftPlayerTurn = true;
+   private boolean isLeftPlayerShooting = false;
+   private boolean isRightPlayerShooting = false;
+   private static final long SHOOT_PAUSE_DURATION = 500; // 0.5 seconds pause for shooting
+   private long leftPlayerShootStartTime = 0;
+   private long rightPlayerShootStartTime = 0;
    
    // Constructor initializes game panel and menu
    public GamePanel() {
@@ -136,31 +141,47 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Updates positions of game objects
    public void move() {
-       playerLeft.move();
-       playerRight.move();
-       // Move bullets
-       if (bulletLeft != null) {
-           bulletLeft.move();
-           // Remove bullet if out of bounds
-           if (bulletLeft.isOutOfBounds(GAME_WIDTH)) {
-               bulletLeft = null;
-               handleBulletCleared();
-           }
-       }
-       if (bulletRight != null) {
-           bulletRight.move();
-           // Remove bullet if out of bounds
-           if (bulletRight.isOutOfBounds(GAME_WIDTH)) {
-               bulletRight = null;
-               handleBulletCleared();
-           }
-       }
-       
-       // Check if it's time to reset bullets
-       if (!canShoot && System.currentTimeMillis() - lastBulletClearTime >= BULLET_RESET_DELAY) {
-           resetBullets();
-       }
-   }
+        // Handle left player shooting pause
+        if (isLeftPlayerShooting) {
+            if (System.currentTimeMillis() - leftPlayerShootStartTime >= SHOOT_PAUSE_DURATION) {
+                isLeftPlayerShooting = false;
+                playerLeft.resumeMovement(System.currentTimeMillis());
+            }
+        } else {
+            playerLeft.move();
+        }
+
+        // Handle right player shooting pause
+        if (isRightPlayerShooting) {
+            if (System.currentTimeMillis() - rightPlayerShootStartTime >= SHOOT_PAUSE_DURATION) {
+                isRightPlayerShooting = false;
+                playerRight.resumeMovement(System.currentTimeMillis());
+            }
+        } else {
+            playerRight.move();
+        }
+
+        // Move bullets
+        if (bulletLeft != null) {
+            bulletLeft.move();
+            if (bulletLeft.isOutOfBounds(GAME_WIDTH)) {
+                bulletLeft = null;
+                handleBulletCleared();
+            }
+        }
+        if (bulletRight != null) {
+            bulletRight.move();
+            if (bulletRight.isOutOfBounds(GAME_WIDTH)) {
+                bulletRight = null;
+                handleBulletCleared();
+            }
+        }
+
+        // Check if it's time to reset bullets
+        if (!canShoot && System.currentTimeMillis() - lastBulletClearTime >= BULLET_RESET_DELAY) {
+            resetBullets();
+        }
+    }
 
    // Handle bullet clearing and turn management
    private void handleBulletCleared() {
@@ -262,57 +283,79 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 	}
 
    // Handles key press events
-   public void keyPressed(KeyEvent e) {
-       // Only process game keys if game has started
-       if (!gameStarted) {
-           return;
-       }
-       
-       switch(e.getKeyCode()) {
-           case KeyEvent.VK_W:
-               if (canShoot && leftPlayerTurn && playerLeft.hasGun()) {
-                   playerLeft.shoot(System.currentTimeMillis());
-                   bulletLeft = new Bullet(
-                       playerLeft.x + playerLeft.width,  // Start at right edge of left player
-                       playerLeft.y + playerLeft.height/2,
-                       bulletWidth, bulletHeight, 
-                       true
-                   );
-                   leftPlayerTurn = false;
-               }
-               playerLeft.setYDirection(0);
-               break;
-           case KeyEvent.VK_UP:
-               if (canShoot && !leftPlayerTurn && playerRight.hasGun()) {
-                   playerRight.shoot(System.currentTimeMillis());
-                   bulletRight = new Bullet(
-                       playerRight.x - bulletWidth,  // Start at left edge of right player
-                       playerRight.y + playerRight.height/2,
-                       bulletWidth, bulletHeight, 
-                       false
-                   );
-                   canShoot = false;
-               }
-               playerRight.setYDirection(0);
-               break;
-       }
-   }
+   
+    public void keyPressed(KeyEvent e) {
+        if (!gameStarted) {
+            return;
+        }
+        
+        switch(e.getKeyCode()) {
+            case KeyEvent.VK_W:
+                if (canShoot && leftPlayerTurn && playerLeft.hasGun()) {
+                    // Initiate shooting sequence for left player
+                    isLeftPlayerShooting = true;
+                    leftPlayerShootStartTime = System.currentTimeMillis();
+                    playerLeft.setYDirection(0);
+                    
+                    // Create bullet after brief pause
+                    bulletLeft = new Bullet(
+                        playerLeft.x + playerLeft.width,
+                        playerLeft.y + playerLeft.height/2,
+                        bulletWidth, bulletHeight,
+                        true
+                    );
+                    playerLeft.shoot(System.currentTimeMillis());
+                    leftPlayerTurn = false;
+                } else if (!playerLeft.hasGun()) {
+                    // Change direction when no gun
+                    playerLeft.reverseDirection();
+                }
+                break;
+
+            case KeyEvent.VK_UP:
+                if (canShoot && !leftPlayerTurn && playerRight.hasGun()) {
+                    // Initiate shooting sequence for right player
+                    isRightPlayerShooting = true;
+                    rightPlayerShootStartTime = System.currentTimeMillis();
+                    playerRight.setYDirection(0);
+                    
+                    // Create bullet after brief pause
+                    bulletRight = new Bullet(
+                        playerRight.x - bulletWidth,
+                        playerRight.y + playerRight.height/2,
+                        bulletWidth, bulletHeight,
+                        false
+                    );
+                    playerRight.shoot(System.currentTimeMillis());
+                    canShoot = false;
+                } else if (!playerRight.hasGun()) {
+                    // Change direction when no gun
+                    playerRight.reverseDirection();
+                }
+                break;
+        }
+    }
 
    // Handles key release events
    public void keyReleased(KeyEvent e) {
-       // Only process game keys if game has started
-       if (!gameStarted) {
-           return;
-       }
-       switch(e.getKeyCode()) {
-           case KeyEvent.VK_W:
-               playerLeft.resumeMovement(System.currentTimeMillis());
-               break;
-           case KeyEvent.VK_UP:
-               playerRight.resumeMovement(System.currentTimeMillis());
-               break;
-       }
-   }
+        if (!gameStarted) {
+            return;
+        }
+        
+        // Only resume movement if not in shooting animation
+        switch(e.getKeyCode()) {
+            case KeyEvent.VK_W:
+                if (!isLeftPlayerShooting) {
+                    playerLeft.resumeMovement(System.currentTimeMillis());
+                }
+                break;
+            case KeyEvent.VK_UP:
+                if (!isRightPlayerShooting) {
+                    playerRight.resumeMovement(System.currentTimeMillis());
+                }
+                break;
+        }
+    }
 
    // Handles key typed events (not used in this program, but must be initialized)
    public void keyTyped(KeyEvent e) {

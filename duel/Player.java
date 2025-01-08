@@ -77,6 +77,14 @@ public class Player extends Rectangle {
        // Update movement direction and velocity
        yVelocity = direction * SPEED;
    }
+   public int getYDirection() {
+        // Return the current Y direction
+        return movementDirection;
+    }
+   public void reverseDirection() {
+        // Reverse the current Y direction
+        setYDirection(-getYDirection());
+    }
    
    /*
     * Moves the player vertically within screen boundaries
