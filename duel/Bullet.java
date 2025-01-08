@@ -19,14 +19,12 @@ public class Bullet extends Rectangle {
     private double rotation;
     private int previousX;
     private int previousY;
-    private final int TOP_MARGIN; // Margin constants for top and bottom of screen 
-    private final int BOTTOM_MARGIN; 
+    private final int TOP_MARGIN; // Top margin constant only
 
     public Bullet(int x, int y, int width, int height, boolean isFromLeftPlayer) {
         super(x, y, width, height);
         this.isFromLeftPlayer = isFromLeftPlayer;
         this.TOP_MARGIN = (int)(GamePanel.GAME_HEIGHT * 0.1); // 10% from top
-        this.BOTTOM_MARGIN = (int)(GamePanel.GAME_HEIGHT * 0.9); // 10% from bottom
         loadBulletImage();
 
         // Set initial velocities
@@ -40,11 +38,9 @@ public class Bullet extends Rectangle {
         previousX = x;
         previousY = y;
         
-        // Ensure initial position respects margins
+        // Ensure initial position respects top margin
         if (y < TOP_MARGIN) {
             y = TOP_MARGIN;
-        } else if (y + height > BOTTOM_MARGIN) {
-            y = BOTTOM_MARGIN - height;
         }
     }
 
@@ -76,15 +72,15 @@ public class Bullet extends Rectangle {
         x += xVelocity;
         y += yVelocity;
 
-        // Bounce off margin boundaries instead of screen edges
-        if (y < TOP_MARGIN || y + height > BOTTOM_MARGIN) {
+        // Bounce off top margin and bottom screen edge
+        if (y < TOP_MARGIN || y > GamePanel.GAME_HEIGHT - height) {
             yVelocity = -yVelocity;
-            // Ensure bullet stays within margins
+            // Ensure bullet stays within bounds
             if (y < TOP_MARGIN) {
                 y = TOP_MARGIN;
             }
-            if (y + height > BOTTOM_MARGIN) {
-                y = BOTTOM_MARGIN - height;
+            if (y > GamePanel.GAME_HEIGHT - height) {
+                y = GamePanel.GAME_HEIGHT - height;
             }
             updateRotation();
         }

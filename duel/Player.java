@@ -16,31 +16,24 @@ public class Player extends Rectangle {
    // Movement and screen-related constants
    private final int SPEED = 5;
    private final int SCREEN_HEIGHT;
-   private final int TOP_MARGIN; // Margin constants for top and bottom of screen
-   private final int BOTTOM_MARGIN;
+   private final int TOP_MARGIN; // Top margin constant
   
    // Movement and state variables
-   private int yVelocity; // Current vertical velocity
-   private boolean isMoving; // Current movement state
-   private int movementDirection; // Current movement direction (1 for down, -1 for up)
-   private boolean hasGun = true; // Whether player currently possesses a gun
-  
-   // Image-related variables
-   private BufferedImage playerImageWithGun; // Player's image with gun
-   private BufferedImage playerImageNoGun; // Player's image without gun
-   private boolean isLeftPlayer; // Indicates which side of the screen the player is on
-  
-   // Shooting-related variables
-   private static final long SHOOT_PAUSE_DURATION = 250; // Milliseconds to pause when shooting
-   private long lastShootTime; // Timestamp of last shoot action
+   private int yVelocity;
+   private boolean isMoving;
+   private int movementDirection;
+   private boolean hasGun = true;
+   private BufferedImage playerImageWithGun;
+   private BufferedImage playerImageNoGun;
+   private boolean isLeftPlayer;
+   private static final long SHOOT_PAUSE_DURATION = 250;
+   private long lastShootTime;
    
-   // Constructor for Player class
    public Player(int x, int y, int playerWidth, int playerHeight,
                  int screenHeight, boolean hasGun) {
        super(x, y, playerWidth, playerHeight);
        this.SCREEN_HEIGHT = screenHeight;
        this.TOP_MARGIN = (int)(screenHeight * 0.1); // 10% from top
-       this.BOTTOM_MARGIN = (int)(screenHeight * 0.9); // 10% from bottom
        this.hasGun = hasGun;
        this.movementDirection = 1;
        this.isMoving = true;
@@ -49,11 +42,9 @@ public class Player extends Rectangle {
        // Determine if this is the left or right player
        this.isLeftPlayer = x < screenHeight / 2;
        
-       // Ensure initial position respects margins
+       // Ensure initial position respects top margin
        if (y < TOP_MARGIN) {
            y = TOP_MARGIN;
-       } else if (y + height > BOTTOM_MARGIN) {
-           y = BOTTOM_MARGIN - height;
        }
        
        loadPlayerImages();
@@ -107,13 +98,13 @@ public class Player extends Rectangle {
        
        y += yVelocity;
        
-       // Boundary checks with direction reversal using margins
-       if (y < TOP_MARGIN) {
+       // Boundary checks with direction reversal
+       if (y < TOP_MARGIN) { // Top boundary at top 10% of screen height
            y = TOP_MARGIN;
            movementDirection *= -1;
            yVelocity = movementDirection * SPEED;
-       } else if (y + height > BOTTOM_MARGIN) {
-           y = BOTTOM_MARGIN - height;
+       } else if (y > SCREEN_HEIGHT - height) {  // Bottom boundary at screen edge
+           y = SCREEN_HEIGHT - height;
            movementDirection *= -1;
            yVelocity = movementDirection * SPEED;
        }
