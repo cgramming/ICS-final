@@ -14,8 +14,10 @@ import javax.imageio.ImageIO;
 
 public class Player extends Rectangle {
    // Movement and screen-related constants
-   private final int SPEED = 5; // Base movement speed
-   private final int SCREEN_HEIGHT; // Height of game screen
+   private final int SPEED = 5;
+   private final int SCREEN_HEIGHT;
+   private final int TOP_MARGIN; // Margin constants for top and bottom of screen
+   private final int BOTTOM_MARGIN;
   
    // Movement and state variables
    private int yVelocity; // Current vertical velocity
@@ -37,15 +39,23 @@ public class Player extends Rectangle {
                  int screenHeight, boolean hasGun) {
        super(x, y, playerWidth, playerHeight);
        this.SCREEN_HEIGHT = screenHeight;
+       this.TOP_MARGIN = (int)(screenHeight * 0.1); // 10% from top
+       this.BOTTOM_MARGIN = (int)(screenHeight * 0.9); // 10% from bottom
        this.hasGun = hasGun;
-       this.movementDirection = 1; // Default to downward movement
-       this.isMoving = true; // Start in moving state
-       this.yVelocity = SPEED; // Initial downward velocity
+       this.movementDirection = 1;
+       this.isMoving = true;
+       this.yVelocity = SPEED;
        
        // Determine if this is the left or right player
        this.isLeftPlayer = x < screenHeight / 2;
        
-       // Load player-specific images
+       // Ensure initial position respects margins
+       if (y < TOP_MARGIN) {
+           y = TOP_MARGIN;
+       } else if (y + height > BOTTOM_MARGIN) {
+           y = BOTTOM_MARGIN - height;
+       }
+       
        loadPlayerImages();
    }
    
@@ -91,21 +101,21 @@ public class Player extends Rectangle {
     * Respects movement state, direction, and screen limits
     */
    public void move() {
-       if (isMoving == false){
-        return;
-       } // Stop movement if paused
+       if (!isMoving) {
+           return;
+       }
+       
        y += yVelocity;
-       // Boundary checks with direction reversal
-       if (y < 0) {
-           y = 0;
-           movementDirection *= -1; // Reverse direction at top
+       
+       // Boundary checks with direction reversal using margins
+       if (y < TOP_MARGIN) {
+           y = TOP_MARGIN;
+           movementDirection *= -1;
            yVelocity = movementDirection * SPEED;
-
-       } else if (y > SCREEN_HEIGHT - height) {
-           y = SCREEN_HEIGHT - height;
-           movementDirection = movementDirection* -1; // Reverse direction at bottom
+       } else if (y + height > BOTTOM_MARGIN) {
+           y = BOTTOM_MARGIN - height;
+           movementDirection *= -1;
            yVelocity = movementDirection * SPEED;
-           
        }
    }
    

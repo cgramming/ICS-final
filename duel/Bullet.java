@@ -16,13 +16,17 @@ public class Bullet extends Rectangle {
     private final int BASE_SPEED = 10;
     private BufferedImage bulletImage;
     private boolean isFromLeftPlayer;
-    private double rotation; // Track bullet rotation in radians
-    private int previousX; // Track previous position
+    private double rotation;
+    private int previousX;
     private int previousY;
+    private final int TOP_MARGIN; // Margin constants for top and bottom of screen 
+    private final int BOTTOM_MARGIN; 
 
     public Bullet(int x, int y, int width, int height, boolean isFromLeftPlayer) {
         super(x, y, width, height);
         this.isFromLeftPlayer = isFromLeftPlayer;
+        this.TOP_MARGIN = (int)(GamePanel.GAME_HEIGHT * 0.1); // 10% from top
+        this.BOTTOM_MARGIN = (int)(GamePanel.GAME_HEIGHT * 0.9); // 10% from bottom
         loadBulletImage();
 
         // Set initial velocities
@@ -35,6 +39,13 @@ public class Bullet extends Rectangle {
         // Initialize previous position
         previousX = x;
         previousY = y;
+        
+        // Ensure initial position respects margins
+        if (y < TOP_MARGIN) {
+            y = TOP_MARGIN;
+        } else if (y + height > BOTTOM_MARGIN) {
+            y = BOTTOM_MARGIN - height;
+        }
     }
 
     private void loadBulletImage() {
@@ -65,9 +76,16 @@ public class Bullet extends Rectangle {
         x += xVelocity;
         y += yVelocity;
 
-        // Update rotation when bouncing off screen bounds
-        if (y < 0 || y > GamePanel.GAME_HEIGHT - height) {
+        // Bounce off margin boundaries instead of screen edges
+        if (y < TOP_MARGIN || y + height > BOTTOM_MARGIN) {
             yVelocity = -yVelocity;
+            // Ensure bullet stays within margins
+            if (y < TOP_MARGIN) {
+                y = TOP_MARGIN;
+            }
+            if (y + height > BOTTOM_MARGIN) {
+                y = BOTTOM_MARGIN - height;
+            }
             updateRotation();
         }
     }
@@ -79,22 +97,6 @@ public class Bullet extends Rectangle {
         yVelocity = (int)(dy * speed);
         
         // Update rotation to match new direction
-        updateRotation();
-    }
-
-    public void bounceOffObstacle(Rectangle obstacle) {
-        // This method is now deprecated in favor of the new circular collision system
-        // Keep it for backwards compatibility if needed
-        xVelocity = -xVelocity;
-        
-        int obstacleCenterY = obstacle.y + obstacle.height / 2;
-        int bulletCenterY = y + height / 2;
-        
-        int distanceFromCenter = bulletCenterY - obstacleCenterY;
-        double normalizedDistance = (double) distanceFromCenter / (obstacle.height / 2);
-        
-        yVelocity = (int) (normalizedDistance * 5);
-        
         updateRotation();
     }
 
