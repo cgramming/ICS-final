@@ -8,34 +8,30 @@
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
+import java.util.*;
 import javax.imageio.ImageIO;
 
 public class Obstacle {
-    // Game dimensions for obstacle placement
     private final int GAME_WIDTH;
     private final int GAME_HEIGHT;
-
-    // Obstacle image and positions
     private BufferedImage obstacleImage;
     private ArrayList<Point> obstaclePositions;
+    private Map<Point, Long> brokenObstacles;
+    private static final long REGENERATION_DELAY = 5000; // 5 seconds in milliseconds
+    private static final int TARGET_OBSTACLES = 5;
     private Random random;
-
-    // Reference to MapManager
     private MapManager mapManager;
 
-    // Constructor initializes obstacle management
     public Obstacle(int gameWidth, int gameHeight, MapManager mapManager) {
         this.GAME_WIDTH = gameWidth;
         this.GAME_HEIGHT = gameHeight;
-        this.mapManager = mapManager; // Save MapManager reference
+        this.mapManager = mapManager;
         this.random = new Random();
         this.obstaclePositions = new ArrayList<>();
+        this.brokenObstacles = new HashMap<>();
         loadObstacleImage();
     }
 
-    // Load obstacle image asset
     private void loadObstacleImage() {
         try {
             obstacleImage = ImageIO.read(
@@ -47,53 +43,79 @@ public class Obstacle {
         }
     }
 
-    // Generate random positions for obstacles to spawn in
     public void generateObstaclePositions() {
         obstaclePositions.clear();
+        brokenObstacles.clear();
 
         if (obstacleImage != null) {
-            int middleStart = GAME_WIDTH / 4;
-            int middleWidth = GAME_WIDTH / 2;
-            int topMargin = (int) (GAME_HEIGHT * 0.1);
-            int usableHeight = GAME_HEIGHT - (2 * topMargin);
-            int numObstacles = 5;
+            generateObstacles(TARGET_OBSTACLES);
+        }
+    }
 
-            for (int i = 0; i < numObstacles; i++) {
-                Point newPoint;
-                boolean overlaps;
-                int attempts = 0;
-                do {
-                    int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
-                    int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
-                    newPoint = new Point(x, y);
-                    overlaps = false;
+    private void generateObstacles(int count) {
+        int middleStart = GAME_WIDTH / 4;
+        int middleWidth = GAME_WIDTH / 2;
+        int topMargin = (int) (GAME_HEIGHT * 0.1);
+        int usableHeight = GAME_HEIGHT - (2 * topMargin);
 
-                    // Check for overlap with existing obstacles
-                    for (Point existing : obstaclePositions) {
-                        if (new Rectangle(newPoint.x, newPoint.y, obstacleImage.getWidth(), obstacleImage.getHeight())
-                            .intersects(new Rectangle(existing.x, existing.y, obstacleImage.getWidth(), obstacleImage.getHeight()))) {
-                            overlaps = true;
-                            break;
-                        }
-                    }
-                    attempts++;
-                } while (overlaps && attempts < 10); // Limit attempts to avoid infinite loops
+        for (int i = 0; i < count; i++) {
+            Point newPoint;
+            boolean overlaps;
+            int attempts = 0;
+            do {
+                int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
+                int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
+                newPoint = new Point(x, y);
+                overlaps = checkOverlap(newPoint);
+                attempts++;
+            } while (overlaps && attempts < 10);
 
+            if (!overlaps) {
                 obstaclePositions.add(newPoint);
             }
         }
     }
 
-    // Draw obstacles on the game panel
+    private boolean checkOverlap(Point newPoint) {
+        Rectangle newRect = new Rectangle(newPoint.x, newPoint.y, 
+            obstacleImage.getWidth(), obstacleImage.getHeight());
+            
+        for (Point existing : obstaclePositions) {
+            Rectangle existingRect = new Rectangle(existing.x, existing.y, 
+                obstacleImage.getWidth(), obstacleImage.getHeight());
+            if (newRect.intersects(existingRect)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public void draw(Graphics g) {
-        if (obstacleImage != null && obstaclePositions != null) {
+        if (obstacleImage != null) {
             for (Point p : obstaclePositions) {
                 g.drawImage(obstacleImage, p.x, p.y, null);
             }
         }
     }
 
-    // Getters
+    public void update() {
+        long currentTime = System.currentTimeMillis();
+        Iterator<Map.Entry<Point, Long>> iterator = brokenObstacles.entrySet().iterator();
+        
+        while (iterator.hasNext()) {
+            Map.Entry<Point, Long> entry = iterator.next();
+            if (currentTime - entry.getValue() >= REGENERATION_DELAY) {
+                iterator.remove();
+                generateObstacles(1);
+            }
+        }
+    }
+
+    public void breakObstacle(Point position) {
+        obstaclePositions.remove(position);
+        brokenObstacles.put(position, System.currentTimeMillis());
+    }
+
     public ArrayList<Point> getObstaclePositions() {
         return obstaclePositions;
     }
@@ -101,8 +123,7 @@ public class Obstacle {
     public BufferedImage getObstacleImage() {
         return obstacleImage;
     }
-    
-    // Generate new positions for obstacles after map change
+
     public void regenerateObstacles() {
         loadObstacleImage();
         generateObstaclePositions();

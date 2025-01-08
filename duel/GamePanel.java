@@ -9,6 +9,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
@@ -227,22 +228,31 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        }
 
        // Check bullet collisions with obstacles
-       for (Point obstaclePosition : obstacle.getObstaclePositions()) {
-           Rectangle obstacleBounds = new Rectangle(
-               obstaclePosition.x, 
-               obstaclePosition.y, 
-               obstacle.getObstacleImage().getWidth(), 
-               obstacle.getObstacleImage().getHeight()
-           );
+        Iterator<Point> obstacleIterator = obstacle.getObstaclePositions().iterator();
+        while (obstacleIterator.hasNext()) {
+            Point obstaclePosition = obstacleIterator.next();
+            Rectangle obstacleBounds = new Rectangle(
+                obstaclePosition.x, 
+                obstaclePosition.y, 
+                obstacle.getObstacleImage().getWidth(), 
+                obstacle.getObstacleImage().getHeight()
+            );
 
-           if (bulletLeft != null && bulletLeft.getBounds().intersects(obstacleBounds)) {
-               bulletLeft.bounceOffObstacle(obstacleBounds);
-           }
+            if (bulletLeft != null && bulletLeft.getBounds().intersects(obstacleBounds)) {
+                bulletLeft.bounceOffObstacle(obstacleBounds);
+                obstacle.breakObstacle(obstaclePosition);
+                break;
+            }
 
-           if (bulletRight != null && bulletRight.getBounds().intersects(obstacleBounds)) {
-               bulletRight.bounceOffObstacle(obstacleBounds);
-           }
-       }
+            if (bulletRight != null && bulletRight.getBounds().intersects(obstacleBounds)) {
+                bulletRight.bounceOffObstacle(obstacleBounds);
+                obstacle.breakObstacle(obstaclePosition);
+                break;
+            }
+        }
+
+        // Update obstacles (check for regeneration)
+        obstacle.update();
    }
 
    // Primary game loop
@@ -258,6 +268,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
            lastTime = now;
            if(delta >= 1) {
                move();
+               obstacle.update();
                checkCollision();
                repaint();
                delta--;
