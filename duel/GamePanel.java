@@ -37,46 +37,49 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    private MapManager mapManager;
    private BufferedImage backgroundImage;
    private Obstacle obstacle;
-   // Turn management
+   // Turn and bullet management
    private long lastBulletClearTime;
    private static final long BULLET_RESET_DELAY = 1000; // 1 second delay
    private boolean canShoot = true;
-   private boolean leftPlayerTurn = true;
+   private boolean firstPlayerHasShot = false;
+   private boolean secondPlayerHasShot = false;
+   private Player firstShootingPlayer = null;
+   private Player secondShootingPlayer = null;
+   // Shooting animation timing
    private boolean isLeftPlayerShooting = false;
    private boolean isRightPlayerShooting = false;
    private static final long SHOOT_PAUSE_DURATION = 500; // 0.5 seconds pause for shooting
    private long leftPlayerShootStartTime = 0;
    private long rightPlayerShootStartTime = 0;
    
-   
    // Constructor initializes game panel and menu
    public GamePanel() {
-	    // Initialize map manager and pass to Obstacle
-	    mapManager = new MapManager();
-	    obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT, mapManager);
-	    
-	    // Panel configuration
-	    setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
-	    setBackground(Color.WHITE);
-	    setFocusable(true);
-	    addKeyListener(this);
-	    
-	    // Create menu first
-	    menu = new Menu(this);
-	    setLayout(new BorderLayout());
-	    add(menu, BorderLayout.CENTER);
-	    
-	    // Create players
-	    playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-	    playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-	    
-	    // Initialize score and thread
-	    score = new Score();
-	    gameThread = new Thread(this);
-	    
-	    // Load map assets
-	    loadMapAssets();
-	}
+        // Initialize map manager and pass to Obstacle
+        mapManager = new MapManager();
+        obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT, mapManager);
+        
+        // Panel configuration
+        setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
+        setBackground(Color.WHITE);
+        setFocusable(true);
+        addKeyListener(this);
+        
+        // Create menu first
+        menu = new Menu(this);
+        setLayout(new BorderLayout());
+        add(menu, BorderLayout.CENTER);
+        
+        // Create players
+        playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        
+        // Initialize score and thread
+        score = new Score();
+        gameThread = new Thread(this);
+        
+        // Load map assets
+        loadMapAssets();
+   }
 
    // Starts the game thread when game begins
    public void startGame() {
@@ -129,17 +132,17 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Load map assets
    private void loadMapAssets() {
-	    try {
-	        // Load background and obstacle assets via MapManager
-	        backgroundImage = ImageIO.read(
-	            getClass().getResourceAsStream(mapManager.getBackgroundImage())
-	        );
-	        obstacle.generateObstaclePositions();
-	    } catch (IOException e) {
-	        System.err.println("Error loading map assets: " + e.getMessage());
-	        backgroundImage = null;
-	    }
-	}
+        try {
+            // Load background and obstacle assets via MapManager
+            backgroundImage = ImageIO.read(
+                getClass().getResourceAsStream(mapManager.getBackgroundImage())
+            );
+            obstacle.generateObstaclePositions();
+        } catch (IOException e) {
+            System.err.println("Error loading map assets: " + e.getMessage());
+            backgroundImage = null;
+        }
+   }
 
    // Updates positions of game objects
    public void move() {
@@ -185,17 +188,89 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         }
     }
 
-   // Handle bullet clearing and turn management
+   // Manages shooting logic for both players
+   private void handlePlayerShoot(Player shooter, Player otherPlayer, boolean isLeftPlayer) {
+        if (canShoot && shooter.hasGun()) {
+            // Handle first player's shot
+            if (!firstPlayerHasShot) {
+                firstPlayerHasShot = true;
+                firstShootingPlayer = shooter;
+                shooter.setHasGun(false);
+                
+                // Create appropriate bullet based on player position
+                if (isLeftPlayer) {
+                    isLeftPlayerShooting = true;
+                    leftPlayerShootStartTime = System.currentTimeMillis();
+                    bulletLeft = new Bullet(
+                        shooter.x + shooter.width,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        true
+                    );
+                } else {
+                    isRightPlayerShooting = true;
+                    rightPlayerShootStartTime = System.currentTimeMillis();
+                    bulletRight = new Bullet(
+                        shooter.x - bulletWidth,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        false
+                    );
+                }
+                shooter.shoot(System.currentTimeMillis());
+            }
+            // Handle second player's shot
+            else if (!secondPlayerHasShot && shooter != firstShootingPlayer) {
+                secondPlayerHasShot = true;
+                secondShootingPlayer = shooter;
+                shooter.setHasGun(false);
+                
+                // Create appropriate bullet based on player position
+                if (isLeftPlayer) {
+                    isLeftPlayerShooting = true;
+                    leftPlayerShootStartTime = System.currentTimeMillis();
+                    bulletLeft = new Bullet(
+                        shooter.x + shooter.width,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        true
+                    );
+                } else {
+                    isRightPlayerShooting = true;
+                    rightPlayerShootStartTime = System.currentTimeMillis();
+                    bulletRight = new Bullet(
+                        shooter.x - bulletWidth,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        false
+                    );
+                }
+                shooter.shoot(System.currentTimeMillis());
+                canShoot = false;
+            }
+        } else if (!shooter.hasGun()) {
+            // Change direction when no gun
+            shooter.setYDirection(-shooter.getYDirection());
+            shooter.move();
+        }
+    }
+
+   // Handles bullet clearing and turn management
    private void handleBulletCleared() {
-       if ((bulletLeft == null && bulletRight == null) && !canShoot) {
+       // Check if both bullets are gone after both players shot
+       if (firstPlayerHasShot && secondPlayerHasShot && 
+           bulletLeft == null && bulletRight == null && !canShoot) {
            lastBulletClearTime = System.currentTimeMillis();
        }
    }
 
-   // Reset bullets and turn state
+   // Resets bullet and turn state for new round
    private void resetBullets() {
        canShoot = true;
-       leftPlayerTurn = true;
+       firstPlayerHasShot = false;
+       secondPlayerHasShot = false;
+       firstShootingPlayer = null;
+       secondShootingPlayer = null;
        playerLeft.setHasGun(true);
        playerRight.setHasGun(true);
    }
@@ -278,75 +353,40 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Method to reset the game/map
    public void resetGame() {
-	    score.reset();
-	    mapManager.randomizeMap();
-	    loadMapAssets();
-	    
-	    playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-	    playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-	    
-	    bulletLeft = null;
-	    bulletRight = null;
-	    
-	    canShoot = true;
-	    leftPlayerTurn = true;
-	    
-	    repaint();
-	}
+        score.reset();
+        mapManager.randomizeMap();
+        loadMapAssets();
+        
+        playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        
+        bulletLeft = null;
+        bulletRight = null;
+        
+        canShoot = true;
+        firstPlayerHasShot = false;
+        secondPlayerHasShot = false;
+        firstShootingPlayer = null;
+        secondShootingPlayer = null;
+        
+        repaint();
+   }
 
    // Handles key press events
-   
-    public void keyPressed(KeyEvent e) {
+   public void keyPressed(KeyEvent e) {
         if (!gameStarted) {
             return;
         }
         
         switch(e.getKeyCode()) {
             case KeyEvent.VK_W:
-                if (canShoot && leftPlayerTurn && playerLeft.hasGun()) {
-                    // Initiate shooting sequence for left player
-                    isLeftPlayerShooting = true;
-                    leftPlayerShootStartTime = System.currentTimeMillis();
-                    playerLeft.setYDirection(0);
-                    // Create bullet after brief pause
-                    bulletLeft = new Bullet(
-                        playerLeft.x + playerLeft.width,
-                        playerLeft.y + playerLeft.height/2,
-                        bulletWidth, bulletHeight,
-                        true
-                    );
-                    playerLeft.shoot(System.currentTimeMillis());
-                    leftPlayerTurn = false;
-                 } else if (!playerLeft.hasGun()) {
-                    // Change direction when no gun
-                    playerLeft.setYDirection(-playerLeft.getYDirection());
-                    playerLeft.move();
-                }
+                handlePlayerShoot(playerLeft, playerRight, true);
                 break;
-
             case KeyEvent.VK_UP:
-                if (canShoot && playerRight.hasGun()) {
-                    // Initiate shooting sequence for right player
-                    isRightPlayerShooting = true;
-                    rightPlayerShootStartTime = System.currentTimeMillis();
-                    playerRight.setYDirection(0);
-                    // Create bullet agfter brief pause
-                    bulletRight = new Bullet(
-                        playerRight.x - bulletWidth,
-                        playerRight.y + playerRight.height/2,
-                        bulletWidth, bulletHeight,
-                        false
-                    );
-                    playerRight.shoot(System.currentTimeMillis());
-                    canShoot = false;
-                } else if (!playerRight.hasGun()) {
-                    // Change direction when no gun
-                    playerRight.setYDirection(-playerRight.getYDirection());
-                    playerRight.move();
-                }
+                handlePlayerShoot(playerRight, playerLeft, false);
                 break;
         }
-    }
+   }
 
    // Handles key release events
    public void keyReleased(KeyEvent e) {
@@ -367,9 +407,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 }
                 break;
         }
-    }
+   }
 
-   // Handles key typed events (not used in this program, but must be initialized)
+   // Handles key typed events (not used in this program)
    public void keyTyped(KeyEvent e) {
        // Not used
    }
