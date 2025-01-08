@@ -33,7 +33,6 @@ public class Bullet extends Rectangle {
 
     private void loadBulletImage() {
         try {
-            // Now using a single bullet image
             bulletImage = ImageIO.read(getClass().getResourceAsStream("bullet.png"));
             bulletImage = resizeImage(bulletImage, width, height);
         } catch (IOException e) {
