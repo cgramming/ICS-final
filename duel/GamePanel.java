@@ -1,4 +1,5 @@
 /*
+
 * Swapnil Kabir and Syed Bazif Shah
 * Date: December 16, 2024
 * Description: GamePanel class manages game objects, rendering,
@@ -7,12 +8,12 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Random;
-import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.image.BufferedImage;
+import javax.imageio.ImageIO;
+import java.io.IOException;
+import java.util.Random;
+import java.util.ArrayList;
 
 public class GamePanel extends JPanel implements Runnable, KeyListener {
    // Screen dimensions
