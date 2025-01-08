@@ -5,9 +5,8 @@
  * tutorial, and game initialization.
  */
 
-
-import javax.swing.*;
 import java.awt.*;
+import javax.swing.*;
 
 public class Menu extends JPanel {
     // Menu components

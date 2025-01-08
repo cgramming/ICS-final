@@ -1,80 +1,110 @@
-  /*
+/*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: December 13, 2024
-* Description: Bullet class representing projectiles shot by players,
-* with directional movement and player-specific image rendering.
+* Date: January 7, 2025
+* Description: Obstacle class manages the generation, positioning,
+* and rendering of obstacles in the game.
 */
 
 import java.awt.*;
-import java.awt.geom.AffineTransform;
-import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Random;
 import javax.imageio.ImageIO;
-public class Obstacle extends Rectangle {
-   private int xVelocity; // Bullet's speed in x direction
-   private final int BASE_SPEED = 10; // Base speed of the bullet
-   private BufferedImage bulletImage; // Image for the bullet
-   private boolean isFromLeftPlayer; // Indicates which player shot a bullet, used to determine which bullet image to display
-   private AffineTransform flipped;
-   /*Constructor for Bullet class*/
-   public Obstacle(int x, int y, int width, int height, boolean isFromLeftPlayer) {
-       super(x, y, width, height);
-       this.isFromLeftPlayer = isFromLeftPlayer;
-       loadBulletImage(x, y);
-      
-       // Set initial velocity based on player
-       xVelocity = isFromLeftPlayer ? BASE_SPEED : -BASE_SPEED;
-   }
-   // Loads the appropriate bullet image based on player
-   private void loadBulletImage(int x, int y) {
-       try {
-           // Load image based on which player shot the bullet
-           String imageName = isFromLeftPlayer ? "bulletRight.png" : "bulletLeft.png";
-           bulletImage = ImageIO.read(getClass().getResourceAsStream(imageName));
-           bulletImage = resize(bulletImage, x, y);
-       } catch (IOException | IllegalArgumentException e) {
-           System.err.println("Error loading bullet image: " + e.getMessage());
-           // Fallback to default color rendering if image fails to load
-           bulletImage = null;
-       }
-   }
-   // Moves the bullet based on its velocity
-   public void move() {
-       x += xVelocity;
-   }
-   // Draws the bullet on the game panel
-   public void draw(Graphics g) {
-       if (bulletImage != null) {
-           // Draw the loaded image
-           g.drawImage(bulletImage, x, y, width, height, null);
-       } else {
-           // Fallback to drawing a white rectangle if image fails
-           g.setColor(Color.WHITE);
-           g.fillRect(x, y, width, height);
-       }
-   }
-   // Checks if the bullet has moved off the screen
-   public boolean isOutOfBounds(int screenWidth) {
-       return x < 0 || x > screenWidth;
-   }
-   // Checks if the bullet collides with a player
-   public boolean collidesWith(Player player) {
-       return this.intersects(player);
-   }
-   public BufferedImage resize(BufferedImage img, int newW, int newH) { 
-        Image tmp = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
-        BufferedImage dimg = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_ARGB);
-        
-        flipped = AffineTransform.getScaleInstance(-1, 1);
-        flipped.translate(-tmp.getWidth(null), 0);
-        AffineTransformOp op = new AffineTransformOp(flipped, AffineTransformOp.TYPE_NEAREST_NEIGHBOR);
-        dimg = op.filter(dimg, null);
 
-        Graphics2D g2d = dimg.createGraphics();
-        g2d.drawImage(tmp, 0, 0, null);
-        g2d.dispose();
+public class Obstacle {
+    // Game dimensions for obstacle placement
+    private final int GAME_WIDTH;
+    private final int GAME_HEIGHT;
 
-        return dimg;
-    }  
+    // Obstacle image and positions
+    private BufferedImage obstacleImage;
+    private ArrayList<Point> obstaclePositions;
+    private Random random;
+
+    // Reference to MapManager
+    private MapManager mapManager;
+
+    // Constructor initializes obstacle management
+    public Obstacle(int gameWidth, int gameHeight, MapManager mapManager) {
+        this.GAME_WIDTH = gameWidth;
+        this.GAME_HEIGHT = gameHeight;
+        this.mapManager = mapManager; // Save MapManager reference
+        this.random = new Random();
+        this.obstaclePositions = new ArrayList<>();
+        loadObstacleImage();
+    }
+
+    // Load obstacle image asset
+    private void loadObstacleImage() {
+        try {
+            obstacleImage = ImageIO.read(
+                getClass().getResourceAsStream(mapManager.getObstacleImage())
+            );
+        } catch (IOException e) {
+            System.err.println("Error loading obstacle image: " + e.getMessage());
+            obstacleImage = null;
+        }
+    }
+
+    // Generate random positions for obstacles to spawn in
+    public void generateObstaclePositions() {
+        obstaclePositions.clear();
+
+        if (obstacleImage != null) {
+            int middleStart = GAME_WIDTH / 4;
+            int middleWidth = GAME_WIDTH / 2;
+            int topMargin = (int) (GAME_HEIGHT * 0.1);
+            int usableHeight = GAME_HEIGHT - (2 * topMargin);
+            int numObstacles = 5;
+
+            for (int i = 0; i < numObstacles; i++) {
+                Point newPoint;
+                boolean overlaps;
+                int attempts = 0;
+                do {
+                    int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
+                    int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
+                    newPoint = new Point(x, y);
+                    overlaps = false;
+
+                    // Check for overlap with existing obstacles
+                    for (Point existing : obstaclePositions) {
+                        if (new Rectangle(newPoint.x, newPoint.y, obstacleImage.getWidth(), obstacleImage.getHeight())
+                            .intersects(new Rectangle(existing.x, existing.y, obstacleImage.getWidth(), obstacleImage.getHeight()))) {
+                            overlaps = true;
+                            break;
+                        }
+                    }
+                    attempts++;
+                } while (overlaps && attempts < 10); // Limit attempts to avoid infinite loops
+
+                obstaclePositions.add(newPoint);
+            }
+        }
+    }
+
+    // Draw obstacles on the game panel
+    public void draw(Graphics g) {
+        if (obstacleImage != null && obstaclePositions != null) {
+            for (Point p : obstaclePositions) {
+                g.drawImage(obstacleImage, p.x, p.y, null);
+            }
+        }
+    }
+
+    // Getters
+    public ArrayList<Point> getObstaclePositions() {
+        return obstaclePositions;
+    }
+
+    public BufferedImage getObstacleImage() {
+        return obstacleImage;
+    }
+    
+    // Generate new positions for obstacles after map change
+    public void regenerateObstacles() {
+        loadObstacleImage();
+        generateObstaclePositions();
+    }
 }
