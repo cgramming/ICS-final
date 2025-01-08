@@ -70,7 +70,6 @@ public class Player extends Rectangle {
        if (direction < 0) movementDirection = -1;
        if (direction == 0) movementDirection = movementDirection *-1;
        // Update movement direction and velocity
-       System.out.println(movementDirection);
        yVelocity = direction * SPEED;
    }
    

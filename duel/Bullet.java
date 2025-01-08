@@ -19,6 +19,7 @@ public class Bullet extends Rectangle {
     private BufferedImage bulletImage; // Image for the bullet
     private boolean isFromLeftPlayer; // Indicates which player shot the bullet, used to determine which bullet image to display
     private AffineTransform flipped;
+    private double slope = 0;
 
     /* Constructor for Bullet class */
     public Bullet(int x, int y, int width, int height, boolean isFromLeftPlayer) {
@@ -37,8 +38,6 @@ public class Bullet extends Rectangle {
             // Load image based on which player shot the bullet
             String imageName = isFromLeftPlayer ? "bulletRight.png" : "bulletLeft.png";
             bulletImage = ImageIO.read(getClass().getResourceAsStream(imageName));
-            bulletImage = rotate(bulletImage, Math.toRadians(10));
-            bulletImage = resize(bulletImage, x, y);
             
         } catch (IOException | IllegalArgumentException e) {
             System.err.println("Error loading bullet image: " + e.getMessage());
@@ -49,19 +48,30 @@ public class Bullet extends Rectangle {
 
     // Moves the bullet based on its velocities
     public void move() {
+        double newslope;
+        if(xVelocity == 0) newslope = 1000;
+        else newslope =(double)(((y + yVelocity) - y))/(double)(((x + xVelocity) - x));
+        
+        if(newslope != slope){
+            double angle = Math.atan(newslope) + Math.PI;
+            System.out.println(angle);
+            bulletImage = rotate(bulletImage, angle);
+            bulletImage = resize(bulletImage, x, y);
+            slope = newslope;
+        }
         x += xVelocity;
         y += yVelocity;
 
+        
         // Ensure the bullet stays within vertical bounds
         if (y < 0 || y > GamePanel.GAME_HEIGHT - height) {
             yVelocity = -yVelocity; // Bounce vertically if hitting the top or bottom
         }
+        
     }
 
     // Handles bouncing off an obstacle
     public void bounceOffObstacle(Rectangle obstacle) {
-        // Reverse x direction
-        xVelocity = -xVelocity;
 
         // Calculate y velocity based on collision point
         int obstacleCenterY = obstacle.y + obstacle.height / 2;
@@ -71,7 +81,9 @@ public class Bullet extends Rectangle {
         double normalizedDistance = (double) distanceFromCenter / (obstacle.height / 2); // -1 to 1
 
         // Scale normalized distance to a y velocity range (e.g., -5 to 5)
-        yVelocity = (int) (normalizedDistance * 5);
+        yVelocity = (int) (normalizedDistance * 7);
+
+        xVelocity = (int)  - Math.sqrt(BASE_SPEED*BASE_SPEED - (double)yVelocity*yVelocity);
     }
 
     // Checks if the bullet has moved off the screen
