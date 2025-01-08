@@ -47,6 +47,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    private long leftPlayerShootStartTime = 0;
    private long rightPlayerShootStartTime = 0;
    
+   
    // Constructor initializes game panel and menu
    public GamePanel() {
 	    // Initialize map manager and pass to Obstacle
