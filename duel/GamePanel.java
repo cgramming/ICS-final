@@ -296,7 +296,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     isLeftPlayerShooting = true;
                     leftPlayerShootStartTime = System.currentTimeMillis();
                     playerLeft.setYDirection(0);
-                    
                     // Create bullet after brief pause
                     bulletLeft = new Bullet(
                         playerLeft.x + playerLeft.width,
@@ -306,20 +305,20 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     );
                     playerLeft.shoot(System.currentTimeMillis());
                     leftPlayerTurn = false;
-                } else if (!playerLeft.hasGun()) {
+                 } else if (!playerLeft.hasGun()) {
                     // Change direction when no gun
-                    playerLeft.reverseDirection();
+                    playerLeft.setYDirection(-playerLeft.getYDirection());
+                    playerLeft.move();
                 }
                 break;
 
             case KeyEvent.VK_UP:
-                if (canShoot && !leftPlayerTurn && playerRight.hasGun()) {
+                if (canShoot && playerRight.hasGun()) {
                     // Initiate shooting sequence for right player
                     isRightPlayerShooting = true;
                     rightPlayerShootStartTime = System.currentTimeMillis();
                     playerRight.setYDirection(0);
-                    
-                    // Create bullet after brief pause
+                    // Create bullet agfter brief pause
                     bulletRight = new Bullet(
                         playerRight.x - bulletWidth,
                         playerRight.y + playerRight.height/2,
@@ -330,7 +329,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     canShoot = false;
                 } else if (!playerRight.hasGun()) {
                     // Change direction when no gun
-                    playerRight.reverseDirection();
+                    playerRight.setYDirection(-playerRight.getYDirection());
+                    playerRight.move();
                 }
                 break;
         }

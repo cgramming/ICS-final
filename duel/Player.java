@@ -131,11 +131,11 @@ public class Player extends Rectangle {
    
    // Resumes movement after shoot pause
    public void resumeMovement(long currentTime) {
-       if (!hasGun || currentTime - lastShootTime >= SHOOT_PAUSE_DURATION) {
-           isMoving = true;
-           yVelocity = movementDirection * SPEED;
-       }
-   }
+    if (currentTime - lastShootTime >= SHOOT_PAUSE_DURATION) {
+        isMoving = true;
+        yVelocity = movementDirection * SPEED;
+        }
+    }
    
    // Draws the player on the screen
    public void draw(Graphics g) {
