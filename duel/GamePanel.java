@@ -302,33 +302,75 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
            }
        }
 
-       // Check bullet collisions with obstacles
-        Iterator<Point> obstacleIterator = obstacle.getObstaclePositions().iterator();
+       Iterator<Point> obstacleIterator = obstacle.getObstaclePositions().iterator();
         while (obstacleIterator.hasNext()) {
             Point obstaclePosition = obstacleIterator.next();
-            Rectangle obstacleBounds = new Rectangle(
-                obstaclePosition.x, 
-                obstaclePosition.y, 
-                obstacle.getObstacleImage().getWidth(), 
-                obstacle.getObstacleImage().getHeight()
-            );
+            Point obstacleCenter = obstacle.getCircleCenter(obstaclePosition);
 
-            if (bulletLeft != null && bulletLeft.getBounds().intersects(obstacleBounds)) {
-                bulletLeft.bounceOffObstacle(obstacleBounds);
-                obstacle.breakObstacle(obstaclePosition);
-                break;
+            if (bulletLeft != null) {
+                Point bulletCenter = new Point(
+                    bulletLeft.x + bulletLeft.width / 2,
+                    bulletLeft.y + bulletLeft.height / 2
+                );
+                Point bulletPrevCenter = new Point(
+                    bulletLeft.getPreviousX() + bulletLeft.width / 2,
+                    bulletLeft.getPreviousY() + bulletLeft.height / 2
+                );
+
+                if (obstacle.lineIntersectsCircle(obstacleCenter, bulletPrevCenter, bulletCenter)) {
+                    // Calculate reflection vector
+                    double dx = bulletCenter.x - obstacleCenter.x;
+                    double dy = bulletCenter.y - obstacleCenter.y;
+                    double length = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (length > 0) {
+                        // Normalize the vector
+                        dx /= length;
+                        dy /= length;
+                        
+                        // Set new bullet direction based on reflection
+                        bulletLeft.setDirection(dx, dy);
+                    }
+                    
+                    obstacle.breakObstacle(obstaclePosition);
+                    break;
+                }
             }
 
-            if (bulletRight != null && bulletRight.getBounds().intersects(obstacleBounds)) {
-                bulletRight.bounceOffObstacle(obstacleBounds);
-                obstacle.breakObstacle(obstaclePosition);
-                break;
+            if (bulletRight != null) {
+                Point bulletCenter = new Point(
+                    bulletRight.x + bulletRight.width / 2,
+                    bulletRight.y + bulletRight.height / 2
+                );
+                Point bulletPrevCenter = new Point(
+                    bulletRight.getPreviousX() + bulletRight.width / 2,
+                    bulletRight.getPreviousY() + bulletRight.height / 2
+                );
+
+                if (obstacle.lineIntersectsCircle(obstacleCenter, bulletPrevCenter, bulletCenter)) {
+                    // Calculate reflection vector
+                    double dx = bulletCenter.x - obstacleCenter.x;
+                    double dy = bulletCenter.y - obstacleCenter.y;
+                    double length = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (length > 0) {
+                        // Normalize the vector
+                        dx /= length;
+                        dy /= length;
+                        
+                        // Set new bullet direction based on reflection
+                        bulletRight.setDirection(dx, dy);
+                    }
+                    
+                    obstacle.breakObstacle(obstaclePosition);
+                    break;
+                }
             }
         }
 
         // Update obstacles (check for regeneration)
         obstacle.update();
-   }
+    }
 
    // Primary game loop
    public void run() {

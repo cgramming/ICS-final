@@ -17,6 +17,8 @@ public class Bullet extends Rectangle {
     private BufferedImage bulletImage;
     private boolean isFromLeftPlayer;
     private double rotation; // Track bullet rotation in radians
+    private int previousX; // Track previous position
+    private int previousY;
 
     public Bullet(int x, int y, int width, int height, boolean isFromLeftPlayer) {
         super(x, y, width, height);
@@ -29,6 +31,10 @@ public class Bullet extends Rectangle {
         
         // Set initial rotation based on player
         rotation = isFromLeftPlayer ? 0 : Math.PI;
+        
+        // Initialize previous position
+        previousX = x;
+        previousY = y;
     }
 
     private void loadBulletImage() {
@@ -51,6 +57,11 @@ public class Bullet extends Rectangle {
     }
 
     public void move() {
+        // Store current position before moving
+        previousX = x;
+        previousY = y;
+        
+        // Update position
         x += xVelocity;
         y += yVelocity;
 
@@ -61,27 +72,44 @@ public class Bullet extends Rectangle {
         }
     }
 
-    public void bounceOffObstacle(Rectangle obstacle) {
-        // Reverse x direction
-        xVelocity = -xVelocity;
+    public void setDirection(double dx, double dy) {
+        // Calculate new velocity based on normalized direction and base speed
+        double speed = Math.sqrt(BASE_SPEED * BASE_SPEED);
+        xVelocity = (int)(dx * speed);
+        yVelocity = (int)(dy * speed);
+        
+        // Update rotation to match new direction
+        updateRotation();
+    }
 
-        // Calculate y velocity based on collision point
+    public void bounceOffObstacle(Rectangle obstacle) {
+        // This method is now deprecated in favor of the new circular collision system
+        // Keep it for backwards compatibility if needed
+        xVelocity = -xVelocity;
+        
         int obstacleCenterY = obstacle.y + obstacle.height / 2;
         int bulletCenterY = y + height / 2;
-
+        
         int distanceFromCenter = bulletCenterY - obstacleCenterY;
         double normalizedDistance = (double) distanceFromCenter / (obstacle.height / 2);
-
-        // Scale normalized distance to a y velocity range
+        
         yVelocity = (int) (normalizedDistance * 5);
-
-        // Update bullet rotation based on new velocity
+        
         updateRotation();
     }
 
     private void updateRotation() {
         // Calculate rotation based on velocity vector
         rotation = Math.atan2(yVelocity, xVelocity);
+    }
+
+    // Getter methods for previous position
+    public int getPreviousX() {
+        return previousX;
+    }
+
+    public int getPreviousY() {
+        return previousY;
     }
 
     public boolean isOutOfBounds(int screenWidth) {
