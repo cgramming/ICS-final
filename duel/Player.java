@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+
 public class Player extends Rectangle {
    // Movement and screen-related constants
    private final int SPEED = 5; // Base movement speed
@@ -23,7 +24,8 @@ public class Player extends Rectangle {
    private boolean hasGun = true; // Whether player currently possesses a gun
   
    // Image-related variables
-   private BufferedImage playerImage; // Player's image
+   private BufferedImage playerImageWithGun; // Player's image with gun
+   private BufferedImage playerImageNoGun; // Player's image without gun
    private boolean isLeftPlayer; // Indicates which side of the screen the player is on
   
    // Shooting-related variables
@@ -35,7 +37,7 @@ public class Player extends Rectangle {
                  int screenHeight, boolean hasGun) {
        super(x, y, playerWidth, playerHeight);
        this.SCREEN_HEIGHT = screenHeight;
-       this.hasGun = true;
+       this.hasGun = hasGun;
        this.movementDirection = 1; // Default to downward movement
        this.isMoving = true; // Start in moving state
        this.yVelocity = SPEED; // Initial downward velocity
@@ -43,20 +45,23 @@ public class Player extends Rectangle {
        // Determine if this is the left or right player
        this.isLeftPlayer = x < screenHeight / 2;
        
-       // Load player-specific image
-       loadPlayerImage();
+       // Load player-specific images
+       loadPlayerImages();
    }
    
-   // Loads the appropriate player image based on player position/
-   private void loadPlayerImage() {
+   // Loads the appropriate player images based on player position
+   private void loadPlayerImages() {
        try {
-           // Load image based on player's position
-           String imageName = isLeftPlayer ? "playerLeft.png" : "playerRight.png";
-           playerImage = ImageIO.read(getClass().getResourceAsStream(imageName));
+           // Load images based on player's position
+           String imageNameWithGun = isLeftPlayer ? "playerLeft.png" : "playerRight.png";
+           String imageNameNoGun = isLeftPlayer ? "playerLeftNoGun.png" : "playerRightNoGun.png";
+           playerImageWithGun = ImageIO.read(getClass().getResourceAsStream(imageNameWithGun));
+           playerImageNoGun = ImageIO.read(getClass().getResourceAsStream(imageNameNoGun));
        } catch (IOException | IllegalArgumentException e) {
-           System.err.println("Error loading player image: " + e.getMessage());
-           // Fallback to null if image fails to load
-           playerImage = null;
+           System.err.println("Error loading player images: " + e.getMessage());
+           // Fallback to null if images fail to load
+           playerImageWithGun = null;
+           playerImageNoGun = null;
        }
    }
    
@@ -100,9 +105,7 @@ public class Player extends Rectangle {
    public boolean shoot(long currentTime) {
        // Check if enough time has passed since last shoot
        if (currentTime - lastShootTime < SHOOT_PAUSE_DURATION) {
-           
            return false;
-           
        }
        if (hasGun) {
            // Pause movement momentarily when shooting with a gun
@@ -111,7 +114,6 @@ public class Player extends Rectangle {
            hasGun = false;
            return true;
        } else {
-        
            // Without a gun, change movement direction
            movementDirection *= -1;
            yVelocity = movementDirection * SPEED;
@@ -124,18 +126,19 @@ public class Player extends Rectangle {
        if (!hasGun || currentTime - lastShootTime >= SHOOT_PAUSE_DURATION) {
            isMoving = true;
            yVelocity = movementDirection * SPEED;
-           hasGun = true;
        }
    }
    
    // Draws the player on the screen
    public void draw(Graphics g) {
-       if (playerImage != null) {
+       BufferedImage currentImage = hasGun ? playerImageWithGun : playerImageNoGun;
+       
+       if (currentImage != null) {
            // Draw the loaded image with custom width scaling
            // Increase width to 1.5 times the original height
            int scaledWidth = (int)(height);
            int xOffset = (width - scaledWidth) / 2; // Center the image
-           g.drawImage(playerImage, x + xOffset, y, scaledWidth, height, null);
+           g.drawImage(currentImage, x + xOffset, y, scaledWidth, height, null);
        } else {
            // Fallback to drawing a black rectangle if image fails
            g.setColor(Color.BLACK);
@@ -146,5 +149,9 @@ public class Player extends Rectangle {
    // Getters and setters
    public void setHasGun(boolean hasGun) {
        this.hasGun = hasGun;
+   }
+   
+   public boolean hasGun() {
+       return hasGun;
    }
 }

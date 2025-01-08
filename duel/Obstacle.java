@@ -1,8 +1,9 @@
 /*
- * Description: Obstacle class manages obstacle generation, rendering,
- * and collision detection for the Duel game. Handles the randomization
- * of obstacle placement and maintains obstacle properties.
- */
+* Swapnil Kabir and Syed Bazif Shah
+* Date: January 7, 2025
+* Description: Obstacle class manages the generation, positioning,
+* and rendering of obstacles in the game.
+*/
 
 import java.awt.*;
 import java.awt.image.BufferedImage;
@@ -11,92 +12,99 @@ import java.util.ArrayList;
 import java.util.Random;
 import javax.imageio.ImageIO;
 
-public class Obstacle extends Rectangle {
-    // Image and collection management
-    private static BufferedImage obstacleImage;
-    private static final Random random = new Random();
-    private static ArrayList<Obstacle> obstacles = new ArrayList<>();
-    
-    // Constants for obstacle generation
-    private static final int NUM_OBSTACLES = 5;
-    
-    // Constructor for creating individual obstacles
-    public Obstacle(int x, int y, int width, int height) {
-        super(x, y, width, height);
+public class Obstacle {
+    // Game dimensions for obstacle placement
+    private final int GAME_WIDTH;
+    private final int GAME_HEIGHT;
+
+    // Obstacle image and positions
+    private BufferedImage obstacleImage;
+    private ArrayList<Point> obstaclePositions;
+    private Random random;
+
+    // Reference to MapManager
+    private MapManager mapManager;
+
+    // Constructor initializes obstacle management
+    public Obstacle(int gameWidth, int gameHeight, MapManager mapManager) {
+        this.GAME_WIDTH = gameWidth;
+        this.GAME_HEIGHT = gameHeight;
+        this.mapManager = mapManager; // Save MapManager reference
+        this.random = new Random();
+        this.obstaclePositions = new ArrayList<>();
+        loadObstacleImage();
     }
-    
-    // Loads the obstacle image from resources
-    public static void loadObstacleImage(String imagePath) {
+
+    // Load obstacle image asset
+    private void loadObstacleImage() {
         try {
-            obstacleImage = ImageIO.read(Obstacle.class.getResourceAsStream(imagePath));
+            obstacleImage = ImageIO.read(
+                getClass().getResourceAsStream(mapManager.getObstacleImage())
+            );
         } catch (IOException e) {
             System.err.println("Error loading obstacle image: " + e.getMessage());
             obstacleImage = null;
         }
     }
-    
-    // Generates obstacles in random positions within the middle section of the game area.
-    public static void generateObstacles(int gameWidth, int gameHeight) {
-        // Clear existing positions
-        obstacles.clear();
-        
+
+    // Generate random positions for obstacles to spawn in
+    public void generateObstaclePositions() {
+        obstaclePositions.clear();
+
         if (obstacleImage != null) {
-            int middleStart = gameWidth / 4;
-            int middleWidth = gameWidth / 2;
-            int topMargin = (int) (gameHeight * 0.1);
-            int usableHeight = gameHeight - (2 * topMargin);
-            
-            for (int i = 0; i < NUM_OBSTACLES; i++) {
+            int middleStart = GAME_WIDTH / 4;
+            int middleWidth = GAME_WIDTH / 2;
+            int topMargin = (int) (GAME_HEIGHT * 0.1);
+            int usableHeight = GAME_HEIGHT - (2 * topMargin);
+            int numObstacles = 5;
+
+            for (int i = 0; i < numObstacles; i++) {
                 Point newPoint;
                 boolean overlaps;
                 int attempts = 0;
-                
                 do {
-                    // Generate random position within the middle section
                     int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
                     int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
                     newPoint = new Point(x, y);
                     overlaps = false;
-                    
+
                     // Check for overlap with existing obstacles
-                    for (Obstacle existing : obstacles) {
-                        if (new Rectangle(newPoint.x, newPoint.y, 
-                                obstacleImage.getWidth(), obstacleImage.getHeight())
-                            .intersects(existing)) {
+                    for (Point existing : obstaclePositions) {
+                        if (new Rectangle(newPoint.x, newPoint.y, obstacleImage.getWidth(), obstacleImage.getHeight())
+                            .intersects(new Rectangle(existing.x, existing.y, obstacleImage.getWidth(), obstacleImage.getHeight()))) {
                             overlaps = true;
                             break;
                         }
                     }
                     attempts++;
                 } while (overlaps && attempts < 10); // Limit attempts to avoid infinite loops
-                
-                obstacles.add(new Obstacle(
-                    newPoint.x, newPoint.y,
-                    obstacleImage.getWidth(), obstacleImage.getHeight()
-                ));
+
+                obstaclePositions.add(newPoint);
             }
         }
     }
-    
-    // Draws all obstacles on the game panel
-    public static void drawAllObstacles(Graphics g) {
-        for (Obstacle obstacle : obstacles) {
-            obstacle.draw(g);
+
+    // Draw obstacles on the game panel
+    public void draw(Graphics g) {
+        if (obstacleImage != null && obstaclePositions != null) {
+            for (Point p : obstaclePositions) {
+                g.drawImage(obstacleImage, p.x, p.y, null);
+            }
         }
     }
-    
-    // Returns the list of all obstacles
-    public static ArrayList<Obstacle> getObstacles() {
-        return obstacles;
+
+    // Getters
+    public ArrayList<Point> getObstaclePositions() {
+        return obstaclePositions;
+    }
+
+    public BufferedImage getObstacleImage() {
+        return obstacleImage;
     }
     
-    // Draws an individual obstacle
-    private void draw(Graphics g) {
-        if (obstacleImage != null) {
-            g.drawImage(obstacleImage, x, y, width, height, null);
-        } else {
-            g.setColor(Color.GRAY);
-            g.fillRect(x, y, width, height);
-        }
+    // Generate new positions for obstacles after map change
+    public void regenerateObstacles() {
+        loadObstacleImage();
+        generateObstaclePositions();
     }
 }
