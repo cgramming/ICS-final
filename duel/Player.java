@@ -28,6 +28,8 @@ public class Player extends Rectangle {
    private boolean isLeftPlayer;
    private static final long SHOOT_PAUSE_DURATION = 250;
    private long lastShootTime;
+   private boolean isFrozen = false;
+   private long freezeStartTime = 0;
    
    public Player(int x, int y, int playerWidth, int playerHeight,
                  int screenHeight, boolean hasGun) {
@@ -92,23 +94,27 @@ public class Player extends Rectangle {
     * Respects movement state, direction, and screen limits
     */
    public void move() {
-       if (!isMoving) {
-           return;
-       }
-       
-       y += yVelocity;
-       
-       // Boundary checks with direction reversal
-       if (y < TOP_MARGIN) { // Top boundary at top 10% of screen height
-           y = TOP_MARGIN;
-           movementDirection *= -1;
-           yVelocity = movementDirection * SPEED;
-       } else if (y > SCREEN_HEIGHT - height) {  // Bottom boundary at screen edge
-           y = SCREEN_HEIGHT - height;
-           movementDirection *= -1;
-           yVelocity = movementDirection * SPEED;
-       }
-   }
+        if (isFrozen) {
+            return;
+        }
+        
+        if (!isMoving) {
+            return;
+        }
+        
+        y += yVelocity;
+        
+        // Boundary checks with direction reversal
+        if (y < TOP_MARGIN) { // Top boundary at 10% of screen height
+            y = TOP_MARGIN;
+            movementDirection *= -1;
+            yVelocity = movementDirection * SPEED;
+        } else if (y > SCREEN_HEIGHT - height) { // Bottom boundary at bottom of frame
+            y = SCREEN_HEIGHT - height;
+            movementDirection *= -1;
+            yVelocity = movementDirection * SPEED;
+        }
+    }
    
    // Handles shoot action based on gun possession
    public boolean shoot(long currentTime) {
@@ -154,6 +160,16 @@ public class Player extends Rectangle {
            g.fillRect(x, y, width, height);
        }
    }
+
+   // Methods to handle activation of Freeze powerup
+   public void freeze() {
+        isFrozen = true;
+        freezeStartTime = System.currentTimeMillis();
+    }
+    
+    public void unfreeze() {
+        isFrozen = false;
+    }
    
    // Getters and setters
    public void setHasGun(boolean hasGun) {

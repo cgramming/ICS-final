@@ -163,9 +163,7 @@ public class Obstacle {
     }
 
     // Get radius of circle
-    public int getCircleRadius() {
-        return circleRadius;
-    }
+    
 
     public void update() {
         long currentTime = System.currentTimeMillis();

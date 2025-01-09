@@ -4,7 +4,6 @@
 * Description: Score class to track and manage player scores in Top-Down Duel
 */
 
-
 import java.awt.*;
 
 public class Score {
@@ -40,14 +39,14 @@ public class Score {
     public void draw(Graphics g, int screenWidth, int screenHeight) {
         g.setColor(Color.BLACK);
         g.setFont(new Font("Arial", Font.BOLD, 40));
-        
+
         // Format score as "LeftScore : RightScore"
         String scoreText = String.format("%d : %d", leftPlayerScore, rightPlayerScore);
-        
+
         // Measure text width to center it
         FontMetrics fm = g.getFontMetrics();
         int textWidth = fm.stringWidth(scoreText);
-        
+
         // Draw score in top middle of screen
         g.drawString(scoreText, 
                      (screenWidth - textWidth) / 2, 
