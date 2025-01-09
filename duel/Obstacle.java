@@ -35,6 +35,7 @@ public class Obstacle {
         loadObstacleImage();
     }
 
+    // Loads the obstacle image from resources and calculates collision radius
     private void loadObstacleImage() {
         try {
             obstacleImage = ImageIO.read(
@@ -49,6 +50,7 @@ public class Obstacle {
         }
     }
 
+    // Clears and regenerates all obstacle positions
     public void generateObstaclePositions() {
     obstaclePositions.clear();
     brokenObstacles.clear();
@@ -58,9 +60,10 @@ public class Obstacle {
         ArrayList<Point> powerupPositions = (powerup != null) ? 
             powerup.getPowerupPositions() : new ArrayList<>();
         generateObstacles(TARGET_OBSTACLES, powerupPositions);
+        }
     }
-}
-
+    
+    // Generates a specified number of non-overlapping obstacles
     private void generateObstacles(int count, ArrayList<Point> powerupPositions) {
     int middleStart = GAME_WIDTH / 4;
     int middleWidth = GAME_WIDTH / 2;
@@ -128,6 +131,7 @@ public class Obstacle {
         return distanceSquared <= circleRadius * circleRadius;
     }
 
+    // Checks if a new obstacle would overlap with existing obstacles or powerups
     private boolean checkOverlap(Point newPoint, ArrayList<Point> powerupPositions) {
         // Get dimensions using full size
         int width = obstacleImage.getWidth();
@@ -186,11 +190,12 @@ public class Obstacle {
     return false;
 }
 
+// Sets the powerup reference for collision checking
 public void setPowerup(Powerup powerup) {
     this.powerup = powerup;
 }
 
-    // Draw collision circles
+    // Renders all active obstacles on the game screen
     public void draw(Graphics g) {
         if (obstacleImage != null) {
             for (Point p : obstaclePositions) {
@@ -204,8 +209,7 @@ public void setPowerup(Powerup powerup) {
         }
     }
 
-    // Get radius of circle
-
+    // Updates obstacle states and regenerates broken obstacles after delay
     public void update(ArrayList<Point> powerupPositions) {
     long currentTime = System.currentTimeMillis();
     Iterator<Map.Entry<Point, Long>> iterator = brokenObstacles.entrySet().iterator();
@@ -222,20 +226,23 @@ public void setPowerup(Powerup powerup) {
     }
     }
 
+    // Marks an obstacle as broken and starts its regeneration timer
     public void breakObstacle(Point position) {
         obstaclePositions.remove(position);
         brokenObstacles.put(position, System.currentTimeMillis());
     }
 
+    // Returns the list of current obstacle positions
     public ArrayList<Point> getObstaclePositions() {
         return obstaclePositions;
     }
 
-    // For use by Powerup class
+    // Returns the obstacle image for use by other classes
     public BufferedImage getObstacleImage() {
         return obstacleImage;
     }
 
+    // Reloads obstacle image and regenerates all obstacles
     public void regenerateObstacles() {
         loadObstacleImage();
         generateObstaclePositions();

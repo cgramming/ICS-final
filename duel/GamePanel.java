@@ -388,21 +388,61 @@ powerup.getPowerupPositions().removeAll(powerupsToRemove);
         Point obstacleCenter = obstacle.getCircleCenter(obstaclePosition);
 
         if (bulletLeft != null) {
-            Boolean isend;
+            Point bulletCenter = new Point(
+                bulletLeft.x + bulletLeft.width / 2,
+                bulletLeft.y + bulletLeft.height / 2
+            );
+            Point bulletPrevCenter = new Point(
+                bulletLeft.getPreviousX() + bulletLeft.width / 2,
+                bulletLeft.getPreviousY() + bulletLeft.height / 2
+            );
 
-            isend = bulletLeft.bulletBounce(obstacleCenter, obstaclePosition, obstacle, bulletLeft);
-
-            if(isend){
+            if (obstacle.lineIntersectsCircle(obstacleCenter, bulletPrevCenter, bulletCenter)) {
+                // Calculate reflection vector
+                double dx = bulletCenter.x - obstacleCenter.x;
+                double dy = bulletCenter.y - obstacleCenter.y;
+                double length = Math.sqrt(dx * dx + dy * dy);
+                
+                if (length > 0) {
+                    // Normalize the vector
+                    dx /= length;
+                    dy /= length;
+                    
+                    // Set new bullet direction based on reflection
+                    bulletLeft.setDirection(dx, dy);
+                }
+                
+                obstacle.breakObstacle(obstaclePosition);
                 break;
             }
         }
 
         if (bulletRight != null) {
-            Boolean isend;
+            Point bulletCenter = new Point(
+                bulletRight.x + bulletRight.width / 2,
+                bulletRight.y + bulletRight.height / 2
+            );
+            Point bulletPrevCenter = new Point(
+                bulletRight.getPreviousX() + bulletRight.width / 2,
+                bulletRight.getPreviousY() + bulletRight.height / 2
+            );
 
-            isend = bulletRight.bulletBounce(obstacleCenter, obstaclePosition, obstacle, bulletRight);
-
-            if(isend){
+            if (obstacle.lineIntersectsCircle(obstacleCenter, bulletPrevCenter, bulletCenter)) {
+                // Calculate reflection vector
+                double dx = bulletCenter.x - obstacleCenter.x;
+                double dy = bulletCenter.y - obstacleCenter.y;
+                double length = Math.sqrt(dx * dx + dy * dy);
+                
+                if (length > 0) {
+                    // Normalize the vector
+                    dx /= length;
+                    dy /= length;
+                    
+                    // Set new bullet direction based on reflection
+                    bulletRight.setDirection(dx, dy);
+                }
+                
+                obstacle.breakObstacle(obstaclePosition);
                 break;
             }
         }

@@ -27,6 +27,7 @@ public class Bullet extends Rectangle {
     private boolean hasFreezeEffect = false; // Used for Freeze powerup
     private Player playerToUnfreeze; // Track player to unfreeze
 
+    // Constructor to initialize bullet with position, size, and player origin
     public Bullet(int x, int y, int width, int height, boolean isFromLeftPlayer) {
         super(x, y, width, height);
         this.isFromLeftPlayer = isFromLeftPlayer;
@@ -50,6 +51,7 @@ public class Bullet extends Rectangle {
         }
     }
 
+    // Loads and resizes the bullet image from resources
     private void loadBulletImage() {
         try {
             bulletImage = ImageIO.read(getClass().getResourceAsStream("bullet.png"));
@@ -60,6 +62,7 @@ public class Bullet extends Rectangle {
         }
     }
 
+    // Resizes an image to specified dimensions while maintaining aspect ratio
     private BufferedImage resizeImage(BufferedImage img, int newW, int newH) {
         Image tmp = img.getScaledInstance(newW, newH, Image.SCALE_SMOOTH);
         BufferedImage dimg = new BufferedImage(newW, newH, BufferedImage.TYPE_INT_ARGB);
@@ -69,6 +72,7 @@ public class Bullet extends Rectangle {
         return dimg;
     }
 
+    // Updates bullet position and handles bouncing off screen boundaries
     public void move() {
         // Store current position before moving
         previousX = x;
@@ -99,6 +103,7 @@ public class Bullet extends Rectangle {
         }
     }
 
+    // Sets the bullet's direction while ensuring minimum horizontal movement
     public void setDirection(double dx, double dy) {
         // Ensure minimum horizontal velocity component
         if (Math.abs(dx) < MIN_HORIZONTAL_RATIO) {
@@ -128,6 +133,7 @@ public class Bullet extends Rectangle {
         updateRotation();
     }
 
+    // Handles bullet collision and bouncing off obstacles
     public Boolean bulletBounce(Point obstacleCenter, Point obstaclePosition, Obstacle obstacle, Bullet bullet){
         Point bulletCenter = new Point(
                 x + width / 2,
@@ -163,6 +169,7 @@ public class Bullet extends Rectangle {
             return false;
     }
 
+    // Updates bullet rotation based on current velocity
     private void updateRotation() {
         // Calculate rotation based on velocity vector
         rotation = Math.atan2(yVelocity, xVelocity);
@@ -193,43 +200,47 @@ public class Bullet extends Rectangle {
         }
     }
 
-    // Getter methods for previous position
+    // Returns the previous X position of the bullet
     public int getPreviousX() {
         return previousX;
     }
 
+    // Returns the previous Y position of the bullet
     public int getPreviousY() {
         return previousY;
     }
     
-    // Getter methods for velocity
+    // Returns the current X velocity of the bullet
     public int getxVelocity() {
         return xVelocity;
     }
     
+    // Returns the current Y velocity of the bullet
     public int getyVelocity() {
         return yVelocity;
     }
 
+    // Checks if bullet is outside the game screen boundaries
     public boolean isOutOfBounds(int screenWidth) {
         return x < -width || x > screenWidth;
     }
 
+    // Checks if bullet intersects with a player
     public boolean collidesWith(Player player) {
         return this.intersects(player);
     }
 
-    // Get list of split bullets
+    // Returns the list of split bullets created by Bomb powerup
     public ArrayList<Bullet> getSplitBullets() {
         return splitBullets;
     }
     
-    // Check if this bullet has split bullets
+    // Checks if bullet has any active split bullets
     public boolean hasSplitBullets() {
         return splitBullets != null && !splitBullets.isEmpty();
     }
     
-    // Check collisions for both main bullet and split bullets
+    // Checks collision for both main bullet and any split bullets
     public boolean collidesWithAny(Player player) {
         // Check main bullet collision
         if (this.intersects(player)) {
@@ -247,7 +258,7 @@ public class Bullet extends Rectangle {
         return false;
     }
     
-    // Check if any part of the bullet (main or split) is out of bounds
+    // Checks if main bullet or any split bullets are out of bounds
     public boolean isAnyBulletOutOfBounds(int screenWidth) {
         // Check main bullet
         if (isOutOfBounds(screenWidth)) {
@@ -265,19 +276,22 @@ public class Bullet extends Rectangle {
         return false;
     }
 
+    // Returns the collision bounds of the bullet
     public Rectangle getBounds() {
         return this;
     }
 
+    // Returns whether bullet was shot by left player
     public boolean isFromLeftPlayer() {
         return isFromLeftPlayer;
     }
 
-    // Methods to manage Freeze powerup
+    // Checks if bullet has freeze effect active
     public boolean hasFreezeEffect() {
       return hasFreezeEffect;
     }
 
+    // Sets freeze effect and freezes target player
     public void setFreezeEffect(boolean hasFreezeEffect, Player playerToFreeze) {
         this.hasFreezeEffect = hasFreezeEffect;
         if (hasFreezeEffect) {
@@ -286,10 +300,12 @@ public class Bullet extends Rectangle {
         }
     }
 
+    // Returns the player that needs to be unfrozen
     public Player getPlayerToUnfreeze() {
         return playerToUnfreeze;
     }
 
+    // Renders the bullet and any split bullets to the screen
     public void draw(Graphics g) {
         if (bulletImage != null) {
             Graphics2D g2d = (Graphics2D) g.create();

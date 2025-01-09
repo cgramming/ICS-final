@@ -15,6 +15,7 @@ public class MapManager {
         final String powerupImage;
         final String obstacleImage;
         
+        // Constructor to initialize map assets paths
         MapData(String backgroundImage, String powerupImage, String obstacleImage) {
             this.backgroundImage = backgroundImage;
             this.powerupImage = powerupImage;
@@ -22,7 +23,7 @@ public class MapManager {
         }
     }
     
-    // Available maps
+    // Available maps with their corresponding image assets
     private static final MapData[] MAPS = {
         new MapData("grassBackground.png", "Bomb.png", "Bush.png"),
         new MapData("snowBackground.png", "Freeze.png", "Igloo.png"),
@@ -32,24 +33,28 @@ public class MapManager {
     private MapData currentMap;
     private Random random;
     
+    // Initialize MapManager with a random map selection
     public MapManager() {
         random = new Random();
         randomizeMap();
     }
     
+    // Randomly selects a new map from available maps
     public void randomizeMap() {
         currentMap = MAPS[random.nextInt(MAPS.length)];
     }
     
-    // Getters for image assets
+    // Returns the filename of the current map's background image
     public String getBackgroundImage() {
         return currentMap.backgroundImage;
     }
     
+    // Returns the filename of the current map's powerup image
     public String getPowerupImage() {
         return currentMap.powerupImage;
     }
     
+    // Returns the filename of the current map's obstacle image
     public String getObstacleImage() {
         return currentMap.obstacleImage;
     }
