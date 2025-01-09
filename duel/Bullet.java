@@ -24,6 +24,7 @@ public class Bullet extends Rectangle {
     private ArrayList<Bullet> splitBullets; // List of split bullets, used when Bomb powerup is activated
     private double scale = 1.0; // Scaler for bullet size, used by Big Bullet powerup
     private boolean hasFreezeEffect = false; // Used for Freeze powerup
+    private Player playerToUnfreeze; // Track player to unfreeze
 
     public Bullet(int x, int y, int width, int height, boolean isFromLeftPlayer) {
         super(x, y, width, height);
@@ -111,7 +112,7 @@ public class Bullet extends Rectangle {
     public void createSplitBullets(double angle1, double angle2) {
         splitBullets = new ArrayList<>();
         
-        // Create two new bullets at the specified angles
+        // Create new bullets without inheriting freeze effect
         Bullet bullet1 = new Bullet(x, y, width, height, isFromLeftPlayer);
         bullet1.setDirection(Math.cos(angle1), Math.sin(angle1));
         
@@ -213,12 +214,20 @@ public class Bullet extends Rectangle {
     }
 
     // Methods to manage Freeze powerup
-    public void setFreezeEffect(boolean hasFreezeEffect) {
-    this.hasFreezeEffect = hasFreezeEffect;
-    }
-
     public boolean hasFreezeEffect() {
       return hasFreezeEffect;
+    }
+
+    public void setFreezeEffect(boolean hasFreezeEffect, Player playerToFreeze) {
+        this.hasFreezeEffect = hasFreezeEffect;
+        if (hasFreezeEffect) {
+            this.playerToUnfreeze = playerToFreeze;
+            playerToFreeze.freeze();
+        }
+    }
+
+    public Player getPlayerToUnfreeze() {
+        return playerToUnfreeze;
     }
 
     public void draw(Graphics g) {

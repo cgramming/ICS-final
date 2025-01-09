@@ -293,22 +293,23 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     // Check bullet collisions with players
     if (bulletLeft != null) {
         if (bulletLeft.collidesWithAny(playerRight)) {
-            score.scoreLeftPlayer(); // Left player scores
-            if (bulletLeft.hasFreezeEffect()) {
-                playerRight.unfreeze();
+            score.scoreLeftPlayer();
+            // Unfreeze the tracked player when bullet is removed
+            if (bulletLeft.getPlayerToUnfreeze() != null) {
+                bulletLeft.getPlayerToUnfreeze().unfreeze();
             }
             bulletLeft = null;
             handleBulletCleared();
         } else if (bulletLeft.collidesWithAny(playerLeft)) {
             score.scoreRightPlayer();
-            if (bulletLeft.hasFreezeEffect()) {
-                playerLeft.unfreeze();
+            if (bulletLeft.getPlayerToUnfreeze() != null) {
+                bulletLeft.getPlayerToUnfreeze().unfreeze();
             }
             bulletLeft = null;
             handleBulletCleared();
         } else if (bulletLeft.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-            if (bulletLeft.hasFreezeEffect()) {
-                playerRight.unfreeze();
+            if (bulletLeft.getPlayerToUnfreeze() != null) {
+                bulletLeft.getPlayerToUnfreeze().unfreeze();
             }
             bulletLeft = null;
             handleBulletCleared();
@@ -318,21 +319,21 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     if (bulletRight != null) {
         if (bulletRight.collidesWithAny(playerLeft)) {
             score.scoreRightPlayer();
-            if (bulletRight.hasFreezeEffect()) {
-                playerLeft.unfreeze();
+            if (bulletRight.getPlayerToUnfreeze() != null) {
+                bulletRight.getPlayerToUnfreeze().unfreeze();
             }
             bulletRight = null;
             handleBulletCleared();
         } else if (bulletRight.collidesWithAny(playerRight)) {
             score.scoreLeftPlayer();
-            if (bulletRight.hasFreezeEffect()) {
-                playerRight.unfreeze();
+            if (bulletRight.getPlayerToUnfreeze() != null) {
+                bulletRight.getPlayerToUnfreeze().unfreeze();
             }
             bulletRight = null;
             handleBulletCleared();
         } else if (bulletRight.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-            if (bulletRight.hasFreezeEffect()) {
-                playerLeft.unfreeze();
+            if (bulletRight.getPlayerToUnfreeze() != null) {
+                bulletRight.getPlayerToUnfreeze().unfreeze();
             }
             bulletRight = null;
             handleBulletCleared();
