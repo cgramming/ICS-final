@@ -22,6 +22,8 @@ public class Obstacle {
     private Random random;
     private MapManager mapManager;
     private int circleRadius; // Radius for collision detection
+    private static final double COLLISION_RADIUS_MULTIPLIER = 0.45; // Aligned with Powerup class
+    private Powerup powerup;
 
     public Obstacle(int gameWidth, int gameHeight, MapManager mapManager) {
         this.GAME_WIDTH = gameWidth;
@@ -48,43 +50,46 @@ public class Obstacle {
     }
 
     public void generateObstaclePositions() {
-        obstaclePositions.clear();
-        brokenObstacles.clear();
+    obstaclePositions.clear();
+    brokenObstacles.clear();
 
-        if (obstacleImage != null) {
-            generateObstacles(TARGET_OBSTACLES);
-        }
+    if (obstacleImage != null) {
+        // Pass an empty ArrayList if powerup is null or no positions available
+        ArrayList<Point> powerupPositions = (powerup != null) ? 
+            powerup.getPowerupPositions() : new ArrayList<>();
+        generateObstacles(TARGET_OBSTACLES, powerupPositions);
     }
+}
 
-    private void generateObstacles(int count) {
-        int middleStart = GAME_WIDTH / 4;
-        int middleWidth = GAME_WIDTH / 2;
-        int topMargin = (int) (GAME_HEIGHT * 0.1);
-        int usableHeight = GAME_HEIGHT - (2 * topMargin);
+    private void generateObstacles(int count, ArrayList<Point> powerupPositions) {
+    int middleStart = GAME_WIDTH / 4;
+    int middleWidth = GAME_WIDTH / 2;
+    int topMargin = (int) (GAME_HEIGHT * 0.1);
+    int usableHeight = GAME_HEIGHT - (2 * topMargin);
 
-        for (int i = 0; i < count; i++) {
-            Point newPoint;
-            boolean overlaps;
-            int attempts = 0;
-            do {
-                int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
-                int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
-                newPoint = new Point(x, y);
-                overlaps = checkOverlap(newPoint);
-                attempts++;
-            } while (overlaps && attempts < 10);
+    int successfulPlacements = 0;
+    int maxAttempts = 20;
+    int totalAttempts = 0;
 
-            if (!overlaps) {
-                obstaclePositions.add(newPoint);
-            }
+    while (successfulPlacements < count && totalAttempts < maxAttempts) {
+        int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
+        int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
+        Point newPoint = new Point(x, y);
+        
+        if (!checkOverlap(newPoint, powerupPositions) && 
+            !obstaclePositions.contains(newPoint)) {
+            obstaclePositions.add(newPoint);
+            successfulPlacements++;
         }
+        totalAttempts++;
     }
+}
 
     // Get circle center point from obstacle position
     public Point getCircleCenter(Point obstaclePosition) {
         return new Point(
-            obstaclePosition.x + obstacleImage.getWidth() / 2,
-            obstaclePosition.y + obstacleImage.getHeight() / 2
+            obstaclePosition.x + (obstacleImage.getWidth() / 2),  // Changed from /4 to /2
+            obstaclePosition.y + (obstacleImage.getHeight() / 2)  // Changed from /4 to /2
         );
     }
 
@@ -123,59 +128,98 @@ public class Obstacle {
         return distanceSquared <= circleRadius * circleRadius;
     }
 
-    private boolean checkOverlap(Point newPoint) {
-        Point newCenter = getCircleCenter(newPoint);
+    private boolean checkOverlap(Point newPoint, ArrayList<Point> powerupPositions) {
+        // Get dimensions using full size
+        int width = obstacleImage.getWidth();
+        int height = obstacleImage.getHeight();
         
+        Point newCenter = new Point(
+            newPoint.x + width / 2,
+            newPoint.y + height / 2
+        );
+        double newRadius = Math.min(width, height) * COLLISION_RADIUS_MULTIPLIER;
+        
+        // Check overlap with other obstacles
         for (Point existing : obstaclePositions) {
-            Point existingCenter = getCircleCenter(existing);
+            Point existingCenter = new Point(
+                existing.x + width / 2,
+                existing.y + height / 2
+            );
             double distance = Math.sqrt(
                 Math.pow(newCenter.x - existingCenter.x, 2) + 
                 Math.pow(newCenter.y - existingCenter.y, 2)
             );
-            // Use circle radius * 2 for minimum distance between centers
-            if (distance < circleRadius * 2) {
+            // Add some padding to ensure no overlap
+            if (distance < (newRadius * 2) + 10) {
                 return true;
             }
         }
-        return false;
+    
+    // Check overlap with powerups if they exist
+    if (powerupPositions != null && powerup != null) {
+        BufferedImage powerupImg = powerup.getPowerupImage();
+        if (powerupImg != null) {
+            int powerupWidth = powerupImg.getWidth();
+            int powerupHeight = powerupImg.getHeight();
+            
+            for (Point powerupPoint : powerupPositions) {
+                Point powerupCenter = new Point(
+                    powerupPoint.x + powerupWidth / 2,
+                    powerupPoint.y + powerupHeight / 2
+                );
+                double powerupRadius = Math.min(powerupWidth, powerupHeight) * COLLISION_RADIUS_MULTIPLIER;
+                
+                double minDistance = newRadius + powerupRadius;
+                double distance = Math.sqrt(
+                    Math.pow(newCenter.x - powerupCenter.x, 2) + 
+                    Math.pow(newCenter.y - powerupCenter.y, 2)
+                );
+                
+                // Add padding to ensure no overlap
+                if (distance < minDistance + 10) {
+                    return true;
+                }
+            }
+        }
     }
+    
+    return false;
+}
 
-    // For debugging: draw collision circles
+public void setPowerup(Powerup powerup) {
+    this.powerup = powerup;
+}
+
+    // Draw collision circles
     public void draw(Graphics g) {
         if (obstacleImage != null) {
             for (Point p : obstaclePositions) {
-                // Draw the image
-                g.drawImage(obstacleImage, p.x, p.y, null);
-                
-                // Uncomment to debug: draw collision circle
-                /*
-                Point center = getCircleCenter(p);
-                g.setColor(Color.RED);
-                g.drawOval(
-                    center.x - circleRadius,
-                    center.y - circleRadius,
-                    circleRadius * 2,
-                    circleRadius * 2
-                );
-                */
+                // Draw the image at full size
+                g.drawImage(obstacleImage, 
+                    p.x, p.y, 
+                    obstacleImage.getWidth(), 
+                    obstacleImage.getHeight(), 
+                    null);
             }
         }
     }
 
     // Get radius of circle
-    
 
-    public void update() {
-        long currentTime = System.currentTimeMillis();
-        Iterator<Map.Entry<Point, Long>> iterator = brokenObstacles.entrySet().iterator();
-        
-        while (iterator.hasNext()) {
-            Map.Entry<Point, Long> entry = iterator.next();
-            if (currentTime - entry.getValue() >= REGENERATION_DELAY) {
-                iterator.remove();
-                generateObstacles(1);
+    public void update(ArrayList<Point> powerupPositions) {
+    long currentTime = System.currentTimeMillis();
+    Iterator<Map.Entry<Point, Long>> iterator = brokenObstacles.entrySet().iterator();
+    
+    while (iterator.hasNext()) {
+        Map.Entry<Point, Long> entry = iterator.next();
+        if (currentTime - entry.getValue() >= REGENERATION_DELAY) {
+            iterator.remove();
+            // Only generate new obstacle if we're below target count
+            if (obstaclePositions.size() < TARGET_OBSTACLES) {
+                generateObstacles(1, powerupPositions);
             }
         }
+    }
     }
 
     public void breakObstacle(Point position) {
@@ -187,6 +231,7 @@ public class Obstacle {
         return obstaclePositions;
     }
 
+    // For use by Powerup class
     public BufferedImage getObstacleImage() {
         return obstacleImage;
     }

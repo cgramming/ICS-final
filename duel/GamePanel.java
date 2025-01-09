@@ -56,12 +56,16 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    
    // Constructor initializes game panel and menu
    public GamePanel() {
-        // Initialize map manager and pass to Obstacle
+        // Initialize map manager and pass to Obstacle, Powerup
         mapManager = new MapManager();
         obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT, mapManager);
-
-        // Initialize powerups
         powerup = new Powerup(GAME_WIDTH, GAME_HEIGHT, mapManager);
+        
+        obstacle.setPowerup(powerup);
+        powerup.setObstacle(obstacle);
+
+        // Set initial positions
+        obstacle.generateObstaclePositions();
         powerup.generatePowerupPositions(obstacle.getObstaclePositions());
         
         // Panel configuration
@@ -428,29 +432,31 @@ powerup.getPowerupPositions().removeAll(powerupsToRemove);
     }
 
     // Update obstacles (check for regeneration)
-    obstacle.update();
+    obstacle.update(powerup.getPowerupPositions());
 }
 
    // Primary game loop
    public void run() {
-       // Game loop
-       long lastTime = System.nanoTime();
-       double amountOfTicks = 60.0;
-       double ns = 1000000000 / amountOfTicks;
-       double delta = 0;
-       while(gameStarted) {
-           long now = System.nanoTime();
-           delta += (now - lastTime) / ns;
-           lastTime = now;
-           if(delta >= 1) {
-               move();
-               obstacle.update();
-               checkCollision();
-               repaint();
-               delta--;
-           }
-       }
-   }
+    // Game loop
+    long lastTime = System.nanoTime();
+    double amountOfTicks = 60.0;
+    double ns = 1000000000 / amountOfTicks;
+    double delta = 0;
+    while(gameStarted) {
+        long now = System.nanoTime();
+        delta += (now - lastTime) / ns;
+        lastTime = now;
+        if(delta >= 1) {
+            move();
+            // Fix: Always pass powerup positions when calling update
+            obstacle.update(powerup.getPowerupPositions());
+            powerup.update(obstacle.getObstaclePositions());
+            checkCollision();
+            repaint();
+            delta--;
+        }
+    }
+}
 
    // Method to reset the game/map
    public void resetGame() {
