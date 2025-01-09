@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: December 13, 2024
+* Date: January 9, 2025
 * Description: Player class representing a player in Top-Down Duel.
 * Extends Rectangle for position and dimension tracking.
 * Supports directional movement and shooting interactions.
@@ -28,6 +28,7 @@ public class Player extends Rectangle {
    private boolean isLeftPlayer;
    private static final long SHOOT_PAUSE_DURATION = 250;
    private long lastShootTime;
+   private static final long FREEZE_DURATION = 4000; // 4 seconds in milliseconds
    private boolean isFrozen = false;
    private long freezeStartTime = 0;
    
@@ -94,27 +95,32 @@ public class Player extends Rectangle {
     * Respects movement state, direction, and screen limits
     */
    public void move() {
-        if (isFrozen) {
-            return;
-        }
-        
-        if (!isMoving) {
-            return;
-        }
-        
-        y += yVelocity;
-        
-        // Boundary checks with direction reversal
-        if (y < TOP_MARGIN) { // Top boundary at 10% of screen height
-            y = TOP_MARGIN;
-            movementDirection *= -1;
-            yVelocity = movementDirection * SPEED;
-        } else if (y > SCREEN_HEIGHT - height) { // Bottom boundary at bottom of frame
-            y = SCREEN_HEIGHT - height;
-            movementDirection *= -1;
-            yVelocity = movementDirection * SPEED;
+    if (isFrozen) {
+        // Check if freeze duration has elapsed
+        if (System.currentTimeMillis() - freezeStartTime >= FREEZE_DURATION) {
+            unfreeze();
+        } else {
+            return; // Still frozen, don't move
         }
     }
+    
+    if (!isMoving) {
+        return;
+    }
+    
+    y += yVelocity;
+    
+    // Boundary checks with direction reversal
+    if (y < TOP_MARGIN) { // Top boundary at 10% of screen height
+        y = TOP_MARGIN;
+        movementDirection *= -1;
+        yVelocity = movementDirection * SPEED;
+    } else if (y > SCREEN_HEIGHT - height) { // Bottom boundary at border of frame
+        y = SCREEN_HEIGHT - height;
+        movementDirection *= -1;
+        yVelocity = movementDirection * SPEED;
+    }
+}
    
    // Handles shoot action based on gun possession
    public boolean shoot(long currentTime) {
@@ -169,6 +175,7 @@ public class Player extends Rectangle {
     
     public void unfreeze() {
         isFrozen = false;
+        freezeStartTime = 0;
     }
    
    // Getters and setters

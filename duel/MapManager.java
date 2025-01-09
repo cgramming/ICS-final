@@ -1,3 +1,11 @@
+/*
+ * Swapnil Kabir and Syed Bazif Shah
+ * Date: January 9, 2025
+ * Description: MapManager class manages the game's map selection,
+ * including randomization of maps and retrieval of associated image assets
+ * for backgrounds, power-ups, and obstacles.
+ */
+
 import java.util.Random;
 
 public class MapManager {

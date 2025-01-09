@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: December 16, 2024
+* Date: January 9, 2025
 * Description: GamePanel class manages game objects, rendering,
 * and primary game loop for the Duel game.
 */

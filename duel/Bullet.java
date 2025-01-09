@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: December 13, 2024
+* Date: January 9, 2025
 * Description: Bullet class representing projectiles shot by players,
 * with directional movement and player-specific image rendering.
 */

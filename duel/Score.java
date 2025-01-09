@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: December 16, 2024
+* Date: January 9, 2025
 * Description: Score class to track and manage player scores in Top-Down Duel
 */
 

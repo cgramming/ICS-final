@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: December 11, 2024
+* Date: January 9, 2025
 * Description: This class sets up the main game window for Top-Down Duel.
 * It initializes and embeds the GamePanel constructor, configures the frame's properties,
 * and ensures the window is displayed at the center of the screen.

@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: January 8, 2025
+* Date: January 9, 2025
 * Description: Powerup class manages the generation, positioning, and effects
 * of powerups in the game. Supports Bomb, Freeze, and Big Bullet powerups
 * with map-specific spawning and unique bullet modifications.
