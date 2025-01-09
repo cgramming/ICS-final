@@ -128,6 +128,41 @@ public class Bullet extends Rectangle {
         updateRotation();
     }
 
+    public Boolean bulletBounce(Point obstacleCenter, Point obstaclePosition, Obstacle obstacle, Bullet bullet){
+        Point bulletCenter = new Point(
+                x + width / 2,
+                y + height / 2
+            );
+            Point bulletPrevCenter = new Point(
+                getPreviousX() + width / 2,
+                getPreviousY() + height / 2
+            );
+
+            if (obstacle.lineIntersectsCircle(obstacleCenter, bulletPrevCenter, bulletCenter)) {
+                // Calculate reflection vector
+                double dx = bulletCenter.x - obstacleCenter.x;
+                double dy = bulletCenter.y - obstacleCenter.y;
+                double length = Math.sqrt(dx * dx + dy * dy);
+                
+                if (length > 0) {
+                    // Normalize the vector
+                    dx /= length;
+                    dy /= length;
+
+                    System.out.println(dx);
+                    if(dx <= 0 && dx >= -0.1) dx = -0.1;
+                    else if (dx > 0 && dx <= 0.1) dx = 0.1;
+                    
+                    // Set new bullet direction based on reflection
+                    bullet.setDirection(dx, dy);
+                }
+                
+                obstacle.breakObstacle(obstaclePosition);
+                return true;
+            }
+            return false;
+    }
+
     private void updateRotation() {
         // Calculate rotation based on velocity vector
         rotation = Math.atan2(yVelocity, xVelocity);
