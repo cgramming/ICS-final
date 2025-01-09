@@ -23,6 +23,7 @@ public class Bullet extends Rectangle {
     private final int TOP_MARGIN; // Top margin constant only
     private ArrayList<Bullet> splitBullets; // List of split bullets, used when Bomb powerup is activated
     private double scale = 1.0; // Scaler for bullet size, used by Big Bullet powerup
+    private boolean hasFreezeEffect = false; // Used for Freeze powerup
 
     public Bullet(int x, int y, int width, int height, boolean isFromLeftPlayer) {
         super(x, y, width, height);
@@ -209,6 +210,15 @@ public class Bullet extends Rectangle {
 
     public boolean isFromLeftPlayer() {
         return isFromLeftPlayer;
+    }
+
+    // Methods to manage Freeze powerup
+    public void setFreezeEffect(boolean hasFreezeEffect) {
+    this.hasFreezeEffect = hasFreezeEffect;
+    }
+
+    public boolean hasFreezeEffect() {
+      return hasFreezeEffect;
     }
 
     public void draw(Graphics g) {

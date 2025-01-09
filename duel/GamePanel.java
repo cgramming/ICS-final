@@ -290,37 +290,54 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Checks and handles game object collisions
    public void checkCollision() {
-        // Check bullet collisions with players
-        if (bulletLeft != null) {
-            if (bulletLeft.collidesWithAny(playerRight)) {
-                score.scoreLeftPlayer(); // Left player scores
-                bulletLeft = null;
-                handleBulletCleared();
-            } else if (bulletLeft.collidesWithAny(playerLeft)) {
-                score.scoreRightPlayer(); // Right player scores when left player hits themselves
-                bulletLeft = null;
-                handleBulletCleared();
-            } else if (bulletLeft.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-                bulletLeft = null;
-                handleBulletCleared();
+    // Check bullet collisions with players
+    if (bulletLeft != null) {
+        if (bulletLeft.collidesWithAny(playerRight)) {
+            score.scoreLeftPlayer(); // Left player scores
+            if (bulletLeft.hasFreezeEffect()) {
+                playerRight.unfreeze();
             }
-        }
-        
-        if (bulletRight != null) {
-            if (bulletRight.collidesWithAny(playerLeft)) {
-                score.scoreRightPlayer(); // Right player scores
-                bulletRight = null;
-                handleBulletCleared();
-            } else if (bulletRight.collidesWithAny(playerRight)) {
-                score.scoreLeftPlayer(); // Left player scores when right player hits themselves
-                bulletRight = null;
-                handleBulletCleared();
-            } else if (bulletRight.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-                bulletRight = null;
-                handleBulletCleared();
+            bulletLeft = null;
+            handleBulletCleared();
+        } else if (bulletLeft.collidesWithAny(playerLeft)) {
+            score.scoreRightPlayer();
+            if (bulletLeft.hasFreezeEffect()) {
+                playerLeft.unfreeze();
             }
+            bulletLeft = null;
+            handleBulletCleared();
+        } else if (bulletLeft.isAnyBulletOutOfBounds(GAME_WIDTH)) {
+            if (bulletLeft.hasFreezeEffect()) {
+                playerRight.unfreeze();
+            }
+            bulletLeft = null;
+            handleBulletCleared();
         }
-
+    }
+    
+    if (bulletRight != null) {
+        if (bulletRight.collidesWithAny(playerLeft)) {
+            score.scoreRightPlayer();
+            if (bulletRight.hasFreezeEffect()) {
+                playerLeft.unfreeze();
+            }
+            bulletRight = null;
+            handleBulletCleared();
+        } else if (bulletRight.collidesWithAny(playerRight)) {
+            score.scoreLeftPlayer();
+            if (bulletRight.hasFreezeEffect()) {
+                playerRight.unfreeze();
+            }
+            bulletRight = null;
+            handleBulletCleared();
+        } else if (bulletRight.isAnyBulletOutOfBounds(GAME_WIDTH)) {
+            if (bulletRight.hasFreezeEffect()) {
+                playerLeft.unfreeze();
+            }
+            bulletRight = null;
+            handleBulletCleared();
+        }
+    }
     // Store powerups to remove in a separate list
 ArrayList<Point> powerupsToRemove = new ArrayList<>();
 
@@ -460,27 +477,30 @@ powerup.getPowerupPositions().removeAll(powerupsToRemove);
 
    // Method to reset the game/map
    public void resetGame() {
-    score.reset();
-    mapManager.randomizeMap();
-    loadMapAssets();
-    
-    playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-    playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-    
-    bulletLeft = null;
-    bulletRight = null;
-    
-    canShoot = true;
-    firstPlayerHasShot = false;
-    secondPlayerHasShot = false;
-    firstShootingPlayer = null;
-    secondShootingPlayer = null;
-    
-    // Reset powerups after map is randomized
-    powerup.regeneratePowerups(obstacle.getObstaclePositions());
-    
-    repaint();
-}
+        score.reset();
+        mapManager.randomizeMap();
+        loadMapAssets();
+        
+        playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        
+        bulletLeft = null;
+        bulletRight = null;
+        
+        canShoot = true;
+        firstPlayerHasShot = false;
+        secondPlayerHasShot = false;
+        firstShootingPlayer = null;
+        secondShootingPlayer = null;
+        
+        // Make sure players are unfrozen when game resets
+        playerLeft.unfreeze();
+        playerRight.unfreeze();
+        
+        powerup.regeneratePowerups(obstacle.getObstaclePositions());
+        
+        repaint();
+    }
 
    // Handles key press events
    public void keyPressed(KeyEvent e) {
