@@ -291,10 +291,11 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Removes bullets from the game when necessary
    private void cleanupBullet(Bullet bullet) {
-        if (bullet != null) {
-            // Always unfreeze the tracked player when cleaning up a bullet
-            if (bullet.hasFreezeEffect() && bullet.getPlayerToUnfreeze() != null) {
-                bullet.getPlayerToUnfreeze().unfreeze();
+        if (bullet != null && bullet.hasFreezeEffect()) {
+            Player playerToUnfreeze = bullet.getPlayerToUnfreeze();
+            if (playerToUnfreeze != null) {
+                // Clear reference to freeze effect
+                bullet.setFreezeEffect(false, null);
             }
         }
     }
@@ -496,8 +497,8 @@ powerup.getPowerupPositions().removeAll(powerupsToRemove);
         secondShootingPlayer = null;
         
         // Make sure players are unfrozen when game resets
-        playerLeft.unfreeze();
-        playerRight.unfreeze();
+        if (playerLeft != null) playerLeft.unfreeze();
+        if (playerRight != null) playerRight.unfreeze();
         
         powerup.regeneratePowerups(obstacle.getObstaclePositions());
         
