@@ -210,8 +210,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 firstShootingPlayer = shooter;
                 shooter.setHasGun(false);
                 
-                // Create appropriate bullet based on player position
                 if (isLeftPlayer) {
+                    cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
                     isLeftPlayerShooting = true;
                     leftPlayerShootStartTime = System.currentTimeMillis();
                     bulletLeft = new Bullet(
@@ -221,6 +221,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                         true
                     );
                 } else {
+                    cleanupBullet(bulletRight);  // Clean up old bullet if it exists
                     isRightPlayerShooting = true;
                     rightPlayerShootStartTime = System.currentTimeMillis();
                     bulletRight = new Bullet(
@@ -238,8 +239,8 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 secondShootingPlayer = shooter;
                 shooter.setHasGun(false);
                 
-                // Create appropriate bullet based on player position
                 if (isLeftPlayer) {
+                    cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
                     isLeftPlayerShooting = true;
                     leftPlayerShootStartTime = System.currentTimeMillis();
                     bulletLeft = new Bullet(
@@ -249,6 +250,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                         true
                     );
                 } else {
+                    cleanupBullet(bulletRight);  // Clean up old bullet if it exists
                     isRightPlayerShooting = true;
                     rightPlayerShootStartTime = System.currentTimeMillis();
                     bulletRight = new Bullet(
@@ -262,7 +264,6 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 canShoot = false;
             }
         } else if (!shooter.hasGun()) {
-            // Change direction when no gun
             shooter.setYDirection(-shooter.getYDirection());
             shooter.move();
         }
@@ -288,57 +289,54 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        playerRight.setHasGun(true);
    }
 
+   // Removes bullets from the game when necessary
+   private void cleanupBullet(Bullet bullet) {
+        if (bullet != null) {
+            // Always unfreeze the tracked player when cleaning up a bullet
+            if (bullet.hasFreezeEffect() && bullet.getPlayerToUnfreeze() != null) {
+                bullet.getPlayerToUnfreeze().unfreeze();
+            }
+        }
+    }
+
    // Checks and handles game object collisions
    public void checkCollision() {
-    // Check bullet collisions with players
-    if (bulletLeft != null) {
-        if (bulletLeft.collidesWithAny(playerRight)) {
-            score.scoreLeftPlayer();
-            // Unfreeze the tracked player when bullet is removed
-            if (bulletLeft.getPlayerToUnfreeze() != null) {
-                bulletLeft.getPlayerToUnfreeze().unfreeze();
+        // Check bullet collisions with players
+        if (bulletLeft != null) {
+            if (bulletLeft.collidesWithAny(playerRight)) {
+                score.scoreLeftPlayer();
+                cleanupBullet(bulletLeft);
+                bulletLeft = null;
+                handleBulletCleared();
+            } else if (bulletLeft.collidesWithAny(playerLeft)) {
+                score.scoreRightPlayer();
+                cleanupBullet(bulletLeft);
+                bulletLeft = null;
+                handleBulletCleared();
+            } else if (bulletLeft.isAnyBulletOutOfBounds(GAME_WIDTH)) {
+                cleanupBullet(bulletLeft);
+                bulletLeft = null;
+                handleBulletCleared();
             }
-            bulletLeft = null;
-            handleBulletCleared();
-        } else if (bulletLeft.collidesWithAny(playerLeft)) {
-            score.scoreRightPlayer();
-            if (bulletLeft.getPlayerToUnfreeze() != null) {
-                bulletLeft.getPlayerToUnfreeze().unfreeze();
-            }
-            bulletLeft = null;
-            handleBulletCleared();
-        } else if (bulletLeft.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-            if (bulletLeft.getPlayerToUnfreeze() != null) {
-                bulletLeft.getPlayerToUnfreeze().unfreeze();
-            }
-            bulletLeft = null;
-            handleBulletCleared();
         }
-    }
-    
-    if (bulletRight != null) {
-        if (bulletRight.collidesWithAny(playerLeft)) {
-            score.scoreRightPlayer();
-            if (bulletRight.getPlayerToUnfreeze() != null) {
-                bulletRight.getPlayerToUnfreeze().unfreeze();
+        
+        if (bulletRight != null) {
+            if (bulletRight.collidesWithAny(playerLeft)) {
+                score.scoreRightPlayer();
+                cleanupBullet(bulletRight);
+                bulletRight = null;
+                handleBulletCleared();
+            } else if (bulletRight.collidesWithAny(playerRight)) {
+                score.scoreLeftPlayer();
+                cleanupBullet(bulletRight);
+                bulletRight = null;
+                handleBulletCleared();
+            } else if (bulletRight.isAnyBulletOutOfBounds(GAME_WIDTH)) {
+                cleanupBullet(bulletRight);
+                bulletRight = null;
+                handleBulletCleared();
             }
-            bulletRight = null;
-            handleBulletCleared();
-        } else if (bulletRight.collidesWithAny(playerRight)) {
-            score.scoreLeftPlayer();
-            if (bulletRight.getPlayerToUnfreeze() != null) {
-                bulletRight.getPlayerToUnfreeze().unfreeze();
-            }
-            bulletRight = null;
-            handleBulletCleared();
-        } else if (bulletRight.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-            if (bulletRight.getPlayerToUnfreeze() != null) {
-                bulletRight.getPlayerToUnfreeze().unfreeze();
-            }
-            bulletRight = null;
-            handleBulletCleared();
         }
-    }
     // Store powerups to remove in a separate list
 ArrayList<Point> powerupsToRemove = new ArrayList<>();
 
@@ -485,6 +483,9 @@ powerup.getPowerupPositions().removeAll(powerupsToRemove);
         playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
         playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
         
+        // Clean up any existing bullets before nullifying them
+        cleanupBullet(bulletLeft);
+        cleanupBullet(bulletRight);
         bulletLeft = null;
         bulletRight = null;
         

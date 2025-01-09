@@ -15,6 +15,7 @@ public class Bullet extends Rectangle {
     private int xVelocity;
     private int yVelocity;
     private final int BASE_SPEED = 10;
+    private final double MIN_HORIZONTAL_RATIO = 0.2; // Minimum horizontal component of velocity, stops bullets getting stuck going up and down
     private BufferedImage bulletImage;
     private boolean isFromLeftPlayer;
     private double rotation;
@@ -79,10 +80,15 @@ public class Bullet extends Rectangle {
 
         // Bounce off top margin and bottom screen edge
         if (y < TOP_MARGIN || y > GamePanel.GAME_HEIGHT - height) {
-            yVelocity = -yVelocity;
+            // When bouncing, maintain horizontal velocity while reversing vertical
+            setDirection(
+                (double)xVelocity / BASE_SPEED,
+                -(double)yVelocity / BASE_SPEED
+            );
+            
+            // Adjust position to prevent sticking
             if (y < TOP_MARGIN) y = TOP_MARGIN;
             if (y > GamePanel.GAME_HEIGHT - height) y = GamePanel.GAME_HEIGHT - height;
-            updateRotation();
         }
         
         // Move split bullets if they exist
@@ -94,10 +100,29 @@ public class Bullet extends Rectangle {
     }
 
     public void setDirection(double dx, double dy) {
+        // Ensure minimum horizontal velocity component
+        if (Math.abs(dx) < MIN_HORIZONTAL_RATIO) {
+            // Maintain direction but adjust magnitude
+            double currentDirection = Math.signum(dx);
+            if (currentDirection == 0) {
+                // If dx is 0, use the initial direction based on player
+                currentDirection = isFromLeftPlayer ? 1 : -1;
+            }
+            dx = currentDirection * MIN_HORIZONTAL_RATIO;
+            
+            // Adjust vertical component to maintain proper speed
+            double maxVerticalComponent = Math.sqrt(1 - MIN_HORIZONTAL_RATIO * MIN_HORIZONTAL_RATIO);
+            dy = Math.signum(dy) * Math.min(Math.abs(dy), maxVerticalComponent);
+        }
+
+        // Normalize the direction vector
+        double magnitude = Math.sqrt(dx * dx + dy * dy);
+        dx = dx / magnitude;
+        dy = dy / magnitude;
+
         // Calculate new velocity based on normalized direction and base speed
-        double speed = Math.sqrt(BASE_SPEED * BASE_SPEED);
-        xVelocity = (int)(dx * speed);
-        yVelocity = (int)(dy * speed);
+        xVelocity = (int)(dx * BASE_SPEED);
+        yVelocity = (int)(dy * BASE_SPEED);
         
         // Update rotation to match new direction
         updateRotation();
@@ -112,7 +137,7 @@ public class Bullet extends Rectangle {
     public void createSplitBullets(double angle1, double angle2) {
         splitBullets = new ArrayList<>();
         
-        // Create new bullets without inheriting freeze effect
+        // Create new bullets
         Bullet bullet1 = new Bullet(x, y, width, height, isFromLeftPlayer);
         bullet1.setDirection(Math.cos(angle1), Math.sin(angle1));
         
@@ -152,7 +177,7 @@ public class Bullet extends Rectangle {
     }
 
     public boolean isOutOfBounds(int screenWidth) {
-        return x < 0 || x > screenWidth;
+        return x < -width || x > screenWidth;
     }
 
     public boolean collidesWith(Player player) {
@@ -194,7 +219,7 @@ public class Bullet extends Rectangle {
             return true;
         }
         
-        // Check split bullets
+        // Check split bullets if they exist
         if (hasSplitBullets()) {
             for (Bullet splitBullet : splitBullets) {
                 if (splitBullet.isOutOfBounds(screenWidth)) {
