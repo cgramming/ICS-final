@@ -72,7 +72,7 @@ public class Powerup {
     private void generatePowerups(int count, ArrayList<Point> obstaclePositions) {
     int middleStart = GAME_WIDTH / 4;
     int middleWidth = GAME_WIDTH / 2;
-    int topMargin = (int) (GAME_HEIGHT * 0.1);
+    int topMargin = (int) (GAME_HEIGHT * 0.12); // Blocks off powerups from top 12% of screen, ensuring players can get high enough to shoot the powerups
     int usableHeight = GAME_HEIGHT - (2 * topMargin);
 
     int successfulPlacements = 0;
@@ -173,7 +173,7 @@ public class Powerup {
     }
     
     return false;
-}
+    }
 
     // Setter method to check for obstacles
     public void setObstacle(Obstacle obstacle) {
@@ -205,12 +205,11 @@ public class Powerup {
             if (powerupPositions.size() < TARGET_POWERUPS) {
                 generatePowerups(1, obstaclePositions);
             }
+            }
         }
     }
-}
 
-
-
+    // Manages functionality of different powerups, tells game which one to activate
     public String activatePowerup(Point position, Bullet bullet, Player otherPlayer) {
         powerupPositions.remove(position);
         usedPowerups.put(position, System.currentTimeMillis());
@@ -219,16 +218,14 @@ public class Powerup {
             case "Bomb":
                 // Create two additional bullets at ±30 degrees
                 double currentAngle = Math.atan2(bullet.getyVelocity(), bullet.getxVelocity());
-                double upAngle = currentAngle - Math.PI/6; // -30 degrees
-                double downAngle = currentAngle + Math.PI/6; // +30 degrees
-                
-                // Set velocities for new bullets
+                double upAngle = currentAngle - Math.PI/6;
+                double downAngle = currentAngle + Math.PI/6;
                 bullet.createSplitBullets(upAngle, downAngle);
                 break;
                 
             case "Freeze":
-                // Freeze other player and guide bullet
-                otherPlayer.freeze();
+                // Set freeze effect and track player to unfreeze
+                bullet.setFreezeEffect(true, otherPlayer);
                 double targetAngle = Math.atan2(
                     otherPlayer.y - bullet.y,
                     otherPlayer.x - bullet.x
@@ -237,7 +234,6 @@ public class Powerup {
                 break;
                 
             case "BigBullet":
-                // Double bullet size
                 bullet.resize(2.0);
                 break;
         }
