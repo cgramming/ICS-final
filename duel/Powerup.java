@@ -18,7 +18,7 @@ public class Powerup {
     private BufferedImage powerupImage;
     private ArrayList<Point> powerupPositions;
     private Map<Point, Long> usedPowerups;
-    private static final long REGENERATION_DELAY = 10000; // 10 seconds
+    private static final long REGENERATION_DELAY = 7000; // 7 seconds
     private static final int TARGET_POWERUPS = 2;
     private Random random;
     private MapManager mapManager;

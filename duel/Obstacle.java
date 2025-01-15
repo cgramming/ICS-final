@@ -62,8 +62,8 @@ public class Obstacle {
         generateObstacles(TARGET_OBSTACLES, powerupPositions);
         }
     }
-    
-    // Generates a specified number of non-overlapping obstacles
+
+    // Generates a specified number of obstacles    
     private void generateObstacles(int count, ArrayList<Point> powerupPositions) {
     int middleStart = GAME_WIDTH / 4;
     int middleWidth = GAME_WIDTH / 2;
@@ -83,10 +83,10 @@ public class Obstacle {
             !obstaclePositions.contains(newPoint)) {
             obstaclePositions.add(newPoint);
             successfulPlacements++;
-        }
+            }
         totalAttempts++;
+        }
     }
-}
 
     // Get circle center point from obstacle position
     public Point getCircleCenter(Point obstaclePosition) {
@@ -182,20 +182,20 @@ public class Obstacle {
                 // Add padding to ensure no overlap
                 if (distance < minDistance + 10) {
                     return true;
+                    }
                 }
             }
         }
-    }
     
-    return false;
-}
+        return false;
+    }
 
-// Sets the powerup reference for collision checking
-public void setPowerup(Powerup powerup) {
+    // Sets the powerup reference for collision checking
+    public void setPowerup(Powerup powerup) {
     this.powerup = powerup;
-}
+    }
 
-    // Renders all active obstacles on the game screen
+    // Draw collision circles
     public void draw(Graphics g) {
         if (obstacleImage != null) {
             for (Point p : obstaclePositions) {
@@ -209,7 +209,7 @@ public void setPowerup(Powerup powerup) {
         }
     }
 
-    // Updates obstacle states and regenerates broken obstacles after delay
+    // Update obstacles as needed
     public void update(ArrayList<Point> powerupPositions) {
     long currentTime = System.currentTimeMillis();
     Iterator<Map.Entry<Point, Long>> iterator = brokenObstacles.entrySet().iterator();
@@ -237,7 +237,7 @@ public void setPowerup(Powerup powerup) {
         return obstaclePositions;
     }
 
-    // Returns the obstacle image for use by other classes
+    // For use by Powerup class
     public BufferedImage getObstacleImage() {
         return obstacleImage;
     }
