@@ -180,15 +180,13 @@ public class Player extends Rectangle {
 
    // Methods to handle activation of Freeze powerup
    public void freeze() {
-    System.out.println("Player " + (isLeftPlayer ? "Left" : "Right") + " frozen");
-    isFrozen = true;
-    freezeStartTime = System.currentTimeMillis();
-}
-
-public void unfreeze() {
-    System.out.println("Player " + (isLeftPlayer ? "Left" : "Right") + " unfrozen");
-    isFrozen = false;
-}
+        isFrozen = true;
+        freezeStartTime = System.currentTimeMillis();
+   }
+    
+    public void unfreeze() {
+        isFrozen = false;
+   }
    
    // Getters and setters
    public void setHasGun(boolean hasGun) {
