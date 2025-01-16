@@ -1,9 +1,9 @@
 /*
- * Swapnil Kabir and Syed Bazif Shah
- * Date: January 9, 2025
- * Description: Menu class for Top-Down Duel game, managing start screen, 
- * tutorial, and game initialization.
- */
+* Swapnil Kabir and Syed Bazif Shah
+* Date: January 17, 2025
+* Description: Menu class for Top-Down Duel game, managing start screen, 
+* tutorial, and game initialization.
+*/
 
 import java.awt.*;
 import javax.swing.*;

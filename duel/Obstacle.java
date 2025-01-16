@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: January 9, 2025
+* Date: January 17, 2025
 * Description: Obstacle class manages the generation, positioning,
 * and rendering of obstacles in the game.
 */

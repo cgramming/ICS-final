@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: January 9, 2025
+* Date: January 17, 2025
 * Description: GamePanel class manages game objects, rendering,
 * and primary game loop for the Duel game.
 */
@@ -32,6 +32,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    private Powerup powerup;
    // Menu and game state
    public Menu menu;
+   private PauseMenu pauseMenu;
+   private EndScreen endScreen;
+   private boolean isPaused = false;
    private boolean gameStarted = false;
    // Bullet dimensions
    int bulletWidth = 50;
@@ -56,63 +59,107 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    
    // Constructor initializes game panel and menu
    public GamePanel() {
-        // Initialize map manager and pass to Obstacle, Powerup
-        mapManager = new MapManager();
-        obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT, mapManager);
-        powerup = new Powerup(GAME_WIDTH, GAME_HEIGHT, mapManager);
-        
-        obstacle.setPowerup(powerup);
-        powerup.setObstacle(obstacle);
+       // Initialize map manager and pass to Obstacle, Powerup
+       mapManager = new MapManager();
+       obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT, mapManager);
+       powerup = new Powerup(GAME_WIDTH, GAME_HEIGHT, mapManager);
+       
+       obstacle.setPowerup(powerup);
+       powerup.setObstacle(obstacle);
 
-        // Set initial positions
-        obstacle.generateObstaclePositions();
-        powerup.generatePowerupPositions(obstacle.getObstaclePositions());
-        
-        // Panel configuration
-        setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
-        setBackground(Color.WHITE);
-        setFocusable(true);
-        addKeyListener(this);
-        
-        // Create menu first
-        menu = new Menu(this);
-        setLayout(new BorderLayout());
-        add(menu, BorderLayout.CENTER);
-        
-        // Create players
-        playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-        
-        // Initialize score and thread
-        score = new Score();
-        gameThread = new Thread(this);
-        
-        // Load map assets
-        loadMapAssets();
+       // Set initial positions
+       obstacle.generateObstaclePositions();
+       powerup.generatePowerupPositions(obstacle.getObstaclePositions());
+       
+       // Panel configuration
+       setPreferredSize(new Dimension(GAME_WIDTH, GAME_HEIGHT));
+       setBackground(Color.WHITE);
+       setFocusable(true);
+       addKeyListener(this);
+       
+       // Use null layout for proper overlay positioning
+       setLayout(null);
+       
+       // Create menu components
+       menu = new Menu(this);
+       pauseMenu = new PauseMenu(this);
+       endScreen = new EndScreen(this);
+       
+       // Set bounds for all components
+       menu.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+       pauseMenu.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+       endScreen.setBounds(0, 0, GAME_WIDTH, GAME_HEIGHT);
+       
+       // Add components in correct order
+       add(menu);
+       add(pauseMenu);
+       add(endScreen);
+       
+       // Set initial visibility
+       menu.setVisible(true);
+       pauseMenu.setVisible(false);
+       endScreen.setVisible(false);
+       
+       // Initialize score and thread
+       score = new Score();
+       gameThread = new Thread(this);
+       
+       // Load map assets
+       loadMapAssets();
+
+       // Initialize game objects (but don't start movement yet)
+       initializeGameObjects();
    }
 
    // Starts the game thread when game begins
    public void startGame() {
-       // Remove menu and show game
-       removeAll();
-       setLayout(new BorderLayout());
-       
+       menu.setVisible(false);
+       pauseMenu.setVisible(true); // Make pause menu visible but not paused
+       endScreen.setVisible(false);
        gameStarted = true;
+       isPaused = false;
+       
+       // Initialize/reset game state
+       initializeGameObjects();
+       score.reset();
+       
+       // Start game thread if not already running
+       if (!gameThread.isAlive()) {
+           gameThread = new Thread(this);
+           gameThread.start();
+       }
+       
        this.requestFocusInWindow();
-       gameThread.start();
    }
-
+   
+// Initialize all game objects
+   private void initializeGameObjects() {
+       playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+       playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+       bulletLeft = null;
+       bulletRight = null;
+       
+       // Reset shooting states
+       canShoot = true;
+       firstPlayerHasShot = false;
+       secondPlayerHasShot = false;
+       firstShootingPlayer = null;
+       secondShootingPlayer = null;
+   }
+   
    // Paints the game components
    public void paint(Graphics g) {
        super.paint(g);
        
-       // Only paint game objects if game has started
        if (gameStarted) {
            image = createImage(getWidth(), getHeight());
            graphics = image.getGraphics();
            draw(graphics);
            g.drawImage(image, 0, 0, this);
        }
+       
+       // Paint overlays last
+       paintChildren(g);
    }
 
    // Draws all game objects
@@ -450,60 +497,97 @@ powerup.getPowerupPositions().removeAll(powerupsToRemove);
 
     // Update obstacles (check for regeneration)
     obstacle.update(powerup.getPowerupPositions());
+    
+    // Check if either player has reached 10 points to trigger end game condition
+    if (score.getLeftPlayerScore() >= 10 || score.getRightPlayerScore() >= 10) {
+        checkWinCondition();
+    }
 }
 
    // Primary game loop
    public void run() {
-    // Game loop
-    long lastTime = System.nanoTime();
-    double amountOfTicks = 60.0;
-    double ns = 1000000000 / amountOfTicks;
-    double delta = 0;
-    while(gameStarted) {
-        long now = System.nanoTime();
-        delta += (now - lastTime) / ns;
-        lastTime = now;
-        if(delta >= 1) {
-            move();
-            // Fix: Always pass powerup positions when calling update
-            obstacle.update(powerup.getPowerupPositions());
-            powerup.update(obstacle.getObstaclePositions());
-            checkCollision();
-            repaint();
-            delta--;
-        }
-    }
-}
+       long lastTime = System.nanoTime();
+       double amountOfTicks = 60.0;
+       double ns = 1000000000 / amountOfTicks;
+       double delta = 0;
+       
+       while(gameStarted) {
+           long now = System.nanoTime();
+           delta += (now - lastTime) / ns;
+           lastTime = now;
+           
+           if(delta >= 1) {
+               if (!isPaused) {
+                   move();
+                   obstacle.update(powerup.getPowerupPositions());
+                   powerup.update(obstacle.getObstaclePositions());
+                   checkCollision();
+               }
+               repaint();
+               delta--;
+           }
+       }
+   }
 
    // Method to reset the game/map
    public void resetGame() {
-        score.reset();
-        mapManager.randomizeMap();
-        loadMapAssets();
-        
-        playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-        
-        // Clean up any existing bullets before nullifying them
-        cleanupBullet(bulletLeft);
-        cleanupBullet(bulletRight);
-        bulletLeft = null;
-        bulletRight = null;
-        
-        canShoot = true;
-        firstPlayerHasShot = false;
-        secondPlayerHasShot = false;
-        firstShootingPlayer = null;
-        secondShootingPlayer = null;
-        
-        // Make sure players are unfrozen when game resets
-        if (playerLeft != null) playerLeft.unfreeze();
-        if (playerRight != null) playerRight.unfreeze();
-        
-        powerup.regeneratePowerups(obstacle.getObstaclePositions());
-        
-        repaint();
-    }
+       score.reset();
+       mapManager.randomizeMap();
+       loadMapAssets();
+       
+       // Reset game objects and state
+       initializeGameObjects();
+       
+       // Reset menu state
+       isPaused = false;
+       pauseMenu.setVisible(true);
+       endScreen.setVisible(false);
+       gameStarted = true;
+       
+       // Make sure game thread is running
+       if (!gameThread.isAlive()) {
+           gameThread = new Thread(this);
+           gameThread.start();
+       }
+       
+       this.requestFocusInWindow();
+       repaint();
+   }
+   
+   // Pauses the game when the player opens the pause menu
+   public void setPaused(boolean paused) {
+       this.isPaused = paused;
+   }
+
+   // Returns directly to the main menu (used when the "Main Menu" button is pressed in the pause menu or end screen
+   public void returnToMainMenu() {
+       gameStarted = false;
+       isPaused = false;
+       pauseMenu.setVisible(false);
+       endScreen.setVisible(false);
+       menu.setVisible(true);
+       
+       // Reset game state
+       score.reset();
+       initializeGameObjects();
+       
+       revalidate();
+       repaint();
+   }
+
+	// Ends the game once a player reaches 10 points
+   private void checkWinCondition() {
+       if (score.getLeftPlayerScore() >= 10 || score.getRightPlayerScore() >= 10) {
+           gameStarted = false;
+           pauseMenu.setVisible(false);
+           
+           if (score.getLeftPlayerScore() >= 10) {
+               endScreen.showEndScreen("Left Player");
+           } else {
+               endScreen.showEndScreen("Right Player");
+           }
+       }
+   }
 
    // Handles key press events
    public void keyPressed(KeyEvent e) {

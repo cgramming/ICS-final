@@ -1,6 +1,6 @@
 /*
 * Swapnil Kabir and Syed Bazif Shah
-* Date: January 9, 2025
+* Date: January 17, 2025
 * Description: Player class representing a player in Top-Down Duel.
 * Extends Rectangle for position and dimension tracking.
 * Supports directional movement and shooting interactions.
