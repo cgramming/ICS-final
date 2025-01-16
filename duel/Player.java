@@ -25,6 +25,7 @@ public class Player extends Rectangle {
    private boolean hasGun = true;
    private BufferedImage playerImageWithGun;
    private BufferedImage playerImageNoGun;
+   private BufferedImage playerImageFrozen;
    private boolean isLeftPlayer;
    private static final long SHOOT_PAUSE_DURATION = 250;
    private long lastShootTime;
@@ -59,13 +60,17 @@ public class Player extends Rectangle {
            // Load images based on player's position
            String imageNameWithGun = isLeftPlayer ? "playerLeft.png" : "playerRight.png";
            String imageNameNoGun = isLeftPlayer ? "playerLeftNoGun.png" : "playerRightNoGun.png";
+           String imageNameFrozen = isLeftPlayer ? "playerLeftFrozen.png" : "playerRightFrozen.png";
+           
            playerImageWithGun = ImageIO.read(getClass().getResourceAsStream(imageNameWithGun));
            playerImageNoGun = ImageIO.read(getClass().getResourceAsStream(imageNameNoGun));
+           playerImageFrozen = ImageIO.read(getClass().getResourceAsStream(imageNameFrozen));
        } catch (IOException | IllegalArgumentException e) {
            System.err.println("Error loading player images: " + e.getMessage());
            // Fallback to null if images fail to load
            playerImageWithGun = null;
            playerImageNoGun = null;
+           playerImageFrozen = null;
        }
    }
    
@@ -152,7 +157,13 @@ public class Player extends Rectangle {
    
    // Draws the player on the screen
    public void draw(Graphics g) {
-       BufferedImage currentImage = hasGun ? playerImageWithGun : playerImageNoGun;
+       BufferedImage currentImage;
+       
+       if (isFrozen) {
+           currentImage = playerImageFrozen;
+       } else {
+           currentImage = hasGun ? playerImageWithGun : playerImageNoGun;
+       }
        
        if (currentImage != null) {
            // Draw the loaded image with custom width scaling
@@ -169,13 +180,15 @@ public class Player extends Rectangle {
 
    // Methods to handle activation of Freeze powerup
    public void freeze() {
-        isFrozen = true;
-        freezeStartTime = System.currentTimeMillis();
-    }
-    
-    public void unfreeze() {
-        isFrozen = false;
-   }
+    System.out.println("Player " + (isLeftPlayer ? "Left" : "Right") + " frozen");
+    isFrozen = true;
+    freezeStartTime = System.currentTimeMillis();
+}
+
+public void unfreeze() {
+    System.out.println("Player " + (isLeftPlayer ? "Left" : "Right") + " unfrozen");
+    isFrozen = false;
+}
    
    // Getters and setters
    public void setHasGun(boolean hasGun) {
