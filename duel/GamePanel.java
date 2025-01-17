@@ -10,7 +10,6 @@ import java.awt.event.*;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import javax.imageio.ImageIO;
 import javax.swing.*;
 
@@ -36,6 +35,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    private EndScreen endScreen;
    private boolean isPaused = false;
    private boolean gameStarted = false;
+   private SoundManager soundManager;
    // Bullet dimensions
    int bulletWidth = 50;
    int bulletHeight = 50;
@@ -59,6 +59,9 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    
    // Constructor initializes game panel and menu
    public GamePanel() {
+       // Initialize sound manager
+       soundManager = new SoundManager();
+
        // Initialize map manager and pass to Obstacle, Powerup
        mapManager = new MapManager();
        obstacle = new Obstacle(GAME_WIDTH, GAME_HEIGHT, mapManager);
@@ -111,8 +114,10 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
        initializeGameObjects();
    }
 
-   // Starts the game thread when game begins
+   // Starts the game thread when game begins and plays associated sound effects
    public void startGame() {
+       soundManager.playGameStart();
+       soundManager.adjustBackgroundMusicVolume(false);
        menu.setVisible(false);
        pauseMenu.setVisible(true); // Make pause menu visible but not paused
        endScreen.setVisible(false);
@@ -349,158 +354,115 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Checks and handles game object collisions
    public void checkCollision() {
-        // Check bullet collisions with players
-        if (bulletLeft != null) {
-            if (bulletLeft.collidesWithAny(playerRight)) {
-                score.scoreLeftPlayer();
-                cleanupBullet(bulletLeft);
-                bulletLeft = null;
-                handleBulletCleared();
-            } else if (bulletLeft.collidesWithAny(playerLeft)) {
-                score.scoreRightPlayer();
-                cleanupBullet(bulletLeft);
-                bulletLeft = null;
-                handleBulletCleared();
-            } else if (bulletLeft.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-                cleanupBullet(bulletLeft);
-                bulletLeft = null;
-                handleBulletCleared();
-            }
-        }
-        
-        if (bulletRight != null) {
-            if (bulletRight.collidesWithAny(playerLeft)) {
-                score.scoreRightPlayer();
-                cleanupBullet(bulletRight);
-                bulletRight = null;
-                handleBulletCleared();
-            } else if (bulletRight.collidesWithAny(playerRight)) {
-                score.scoreLeftPlayer();
-                cleanupBullet(bulletRight);
-                bulletRight = null;
-                handleBulletCleared();
-            } else if (bulletRight.isAnyBulletOutOfBounds(GAME_WIDTH)) {
-                cleanupBullet(bulletRight);
-                bulletRight = null;
-                handleBulletCleared();
-            }
-        }
-    // Store powerups to remove in a separate list
-ArrayList<Point> powerupsToRemove = new ArrayList<>();
-
-// Check bullet collisions with powerups
-for (Point powerupPosition : new ArrayList<>(powerup.getPowerupPositions())) {
-    Point powerupCenter = powerup.getCircleCenter(powerupPosition);
-
-    if (bulletLeft != null) {
-        Point bulletCenter = new Point(
-            bulletLeft.x + bulletLeft.width/2,
-            bulletLeft.y + bulletLeft.height/2
-        );
-        Point bulletPrevCenter = new Point(
-            bulletLeft.getPreviousX() + bulletLeft.width/2,
-            bulletLeft.getPreviousY() + bulletLeft.height/2
-        );
-
-        if (powerup.lineIntersectsCircle(powerupCenter, bulletPrevCenter, bulletCenter)) {
-            String powerupType = powerup.activatePowerup(powerupPosition, bulletLeft, playerRight);
-            powerupsToRemove.add(powerupPosition);
-        }
-    }
-
-    if (bulletRight != null) {
-        Point bulletCenter = new Point(
-            bulletRight.x + bulletRight.width/2,
-            bulletRight.y + bulletRight.height/2
-        );
-        Point bulletPrevCenter = new Point(
-            bulletRight.getPreviousX() + bulletRight.width/2,
-            bulletRight.getPreviousY() + bulletRight.height/2
-        );
-
-        if (powerup.lineIntersectsCircle(powerupCenter, bulletPrevCenter, bulletCenter)) {
-            String powerupType = powerup.activatePowerup(powerupPosition, bulletRight, playerLeft);
-            powerupsToRemove.add(powerupPosition);
-        }
-    }
-}
-
-// Remove the powerups after iteration is complete
-powerup.getPowerupPositions().removeAll(powerupsToRemove);
-
-    // Check bullet collisions with obstacles
-    Iterator<Point> obstacleIterator = obstacle.getObstaclePositions().iterator();
-    while (obstacleIterator.hasNext()) {
-        Point obstaclePosition = obstacleIterator.next();
-        Point obstacleCenter = obstacle.getCircleCenter(obstaclePosition);
-
-        if (bulletLeft != null) {
-            Point bulletCenter = new Point(
-                bulletLeft.x + bulletLeft.width / 2,
-                bulletLeft.y + bulletLeft.height / 2
-            );
-            Point bulletPrevCenter = new Point(
-                bulletLeft.getPreviousX() + bulletLeft.width / 2,
-                bulletLeft.getPreviousY() + bulletLeft.height / 2
-            );
-
-            if (obstacle.lineIntersectsCircle(obstacleCenter, bulletPrevCenter, bulletCenter)) {
-                // Calculate reflection vector
-                double dx = bulletCenter.x - obstacleCenter.x;
-                double dy = bulletCenter.y - obstacleCenter.y;
-                double length = Math.sqrt(dx * dx + dy * dy);
-                
-                if (length > 0) {
-                    // Normalize the vector
-                    dx /= length;
-                    dy /= length;
-                    
-                    // Set new bullet direction based on reflection
-                    bulletLeft.setDirection(dx, dy);
-                }
-                
-                obstacle.breakObstacle(obstaclePosition);
-                break;
-            }
-        }
-
-        if (bulletRight != null) {
-            Point bulletCenter = new Point(
-                bulletRight.x + bulletRight.width / 2,
-                bulletRight.y + bulletRight.height / 2
-            );
-            Point bulletPrevCenter = new Point(
-                bulletRight.getPreviousX() + bulletRight.width / 2,
-                bulletRight.getPreviousY() + bulletRight.height / 2
-            );
-
-            if (obstacle.lineIntersectsCircle(obstacleCenter, bulletPrevCenter, bulletCenter)) {
-                // Calculate reflection vector
-                double dx = bulletCenter.x - obstacleCenter.x;
-                double dy = bulletCenter.y - obstacleCenter.y;
-                double length = Math.sqrt(dx * dx + dy * dy);
-                
-                if (length > 0) {
-                    // Normalize the vector
-                    dx /= length;
-                    dy /= length;
-                    
-                    // Set new bullet direction based on reflection
-                    bulletRight.setDirection(dx, dy);
-                }
-                
-                obstacle.breakObstacle(obstaclePosition);
-                break;
-            }
-        }
-    }
-
-    // Update obstacles (check for regeneration)
-    obstacle.update(powerup.getPowerupPositions());
+    // Handle main bullet collisions
+    handleBulletCollisions(bulletLeft);
+    handleBulletCollisions(bulletRight);
     
     // Check if either player has reached 10 points to trigger end game condition
     if (score.getLeftPlayerScore() >= 10 || score.getRightPlayerScore() >= 10) {
         checkWinCondition();
+        }
+    }
+
+    // Handle bullet collisions
+    private void handleBulletCollisions(Bullet bullet) {
+    if (bullet == null) return;
+    
+    // Create list of bullets to process (main bullet and any split bullets)
+    ArrayList<Bullet> bulletsToProcess = new ArrayList<>();
+    bulletsToProcess.add(bullet);
+    if (bullet.hasSplitBullets()) {
+        bulletsToProcess.addAll(bullet.getSplitBullets());
+    }
+    
+    // Track bullets that need to be removed
+    ArrayList<Bullet> bulletsToRemove = new ArrayList<>();
+    
+    // Process each bullet individually
+    for (Bullet currentBullet : bulletsToProcess) {
+        boolean shouldRemoveBullet = false;
+        
+        // Check player collisions
+        if (currentBullet.isFromLeftPlayer()) {
+            if (currentBullet.collidesWith(playerRight)) {
+                score.scoreLeftPlayer();
+                shouldRemoveBullet = true;
+            } else if (currentBullet.collidesWith(playerLeft)) {
+                score.scoreRightPlayer();
+                shouldRemoveBullet = true;
+            }
+        } else {
+            if (currentBullet.collidesWith(playerLeft)) {
+                score.scoreRightPlayer();
+                shouldRemoveBullet = true;
+            } else if (currentBullet.collidesWith(playerRight)) {
+                score.scoreLeftPlayer();
+                shouldRemoveBullet = true;
+            }
+        }
+        
+        if (!shouldRemoveBullet) {  // Only process further if bullet hasn't hit a player
+            // Check powerup collisions
+            for (Point powerupPosition : new ArrayList<>(powerup.getPowerupPositions())) {
+                Point powerupCenter = powerup.getCircleCenter(powerupPosition);
+                Point bulletCenter = new Point(
+                    currentBullet.x + currentBullet.width/2,
+                    currentBullet.y + currentBullet.height/2
+                );
+                Point bulletPrevCenter = new Point(
+                    currentBullet.getPreviousX() + currentBullet.width/2,
+                    currentBullet.getPreviousY() + currentBullet.height/2
+                );
+
+                if (powerup.lineIntersectsCircle(powerupCenter, bulletPrevCenter, bulletCenter)) {
+                    String powerupType = powerup.activatePowerup(powerupPosition, currentBullet, 
+                        currentBullet.isFromLeftPlayer() ? playerRight : playerLeft);
+                    powerup.getPowerupPositions().remove(powerupPosition);
+                    break;
+                }
+            }
+            
+            // Check obstacle collisions
+            for (Point obstaclePosition : new ArrayList<>(obstacle.getObstaclePositions())) {
+                Point obstacleCenter = obstacle.getCircleCenter(obstaclePosition);
+                if (currentBullet.bulletBounce(obstacleCenter, obstaclePosition, obstacle, currentBullet)) {
+                    break;
+                }
+            }
+            
+            // Check if bullet is out of bounds
+            if (currentBullet.isOutOfBounds(GAME_WIDTH)) {
+                shouldRemoveBullet = true;
+            }
+        }
+        
+        // Add bullet to removal list if necessary
+        if (shouldRemoveBullet) {
+            bulletsToRemove.add(currentBullet);
+        }
+    }
+    
+    // Remove bullets that need to be removed
+    for (Bullet bulletToRemove : bulletsToRemove) {
+        if (bulletToRemove == bullet) {
+            // This is the main bullet
+            if (bullet == bulletLeft) {
+                bulletLeft = null;
+            } else {
+                bulletRight = null;
+            }
+        } else {
+            // This is a split bullet, remove it from its parent's split bullets list
+            bullet.getSplitBullets().remove(bulletToRemove);
+        }
+    }
+    
+    // Check if we need to handle bullet cleared
+    if ((bulletLeft == null || 
+         (bulletLeft != null && !bulletLeft.hasSplitBullets())) && 
+        (bulletRight == null || 
+         (bulletRight != null && !bulletRight.hasSplitBullets()))) {
+        handleBulletCleared();
     }
 }
 

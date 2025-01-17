@@ -74,34 +74,34 @@ public class Bullet extends Rectangle {
 
     // Updates bullet position and handles bouncing off screen boundaries
     public void move() {
-        // Store current position before moving
-        previousX = x;
-        previousY = y;
-        
-        // Update position
-        x += xVelocity;
-        y += yVelocity;
+    // Store current position before moving
+    previousX = x;
+    previousY = y;
+    
+    // Update position
+    x += xVelocity;
+    y += yVelocity;
 
-        // Bounce off top margin and bottom screen edge
-        if (y < TOP_MARGIN || y > GamePanel.GAME_HEIGHT - height) {
-            // When bouncing, maintain horizontal velocity while reversing vertical
-            setDirection(
-                (double)xVelocity / BASE_SPEED,
-                -(double)yVelocity / BASE_SPEED
-            );
-            
-            // Adjust position to prevent sticking
-            if (y < TOP_MARGIN) y = TOP_MARGIN;
-            if (y > GamePanel.GAME_HEIGHT - height) y = GamePanel.GAME_HEIGHT - height;
-        }
+    // Bounce off top margin and bottom screen edge
+    if (y < TOP_MARGIN || y > GamePanel.GAME_HEIGHT - height) {
+        // When bouncing, maintain horizontal velocity while reversing vertical
+        setDirection(
+            (double)xVelocity / BASE_SPEED,
+            -(double)yVelocity / BASE_SPEED
+        );
         
-        // Move split bullets if they exist
-        if (splitBullets != null) {
-            for (Bullet bullet : splitBullets) {
-                bullet.move();
-            }
+        // Adjust position to prevent sticking
+        if (y < TOP_MARGIN) y = TOP_MARGIN;
+        if (y > GamePanel.GAME_HEIGHT - height) y = GamePanel.GAME_HEIGHT - height;
+    }
+    
+    // Move split bullets independently
+    if (splitBullets != null) {
+        for (Bullet splitBullet : splitBullets) {
+            splitBullet.move(); // Each split bullet handles its own movement
         }
     }
+}
 
     // Sets the bullet's direction while ensuring minimum horizontal movement
     public void setDirection(double dx, double dy) {
@@ -177,18 +177,20 @@ public class Bullet extends Rectangle {
 
     // Create split bullets for Bomb powerup
     public void createSplitBullets(double angle1, double angle2) {
-        splitBullets = new ArrayList<>();
-        
-        // Create new bullets
-        Bullet bullet1 = new Bullet(x, y, width, height, isFromLeftPlayer);
-        bullet1.setDirection(Math.cos(angle1), Math.sin(angle1));
-        
-        Bullet bullet2 = new Bullet(x, y, width, height, isFromLeftPlayer);
-        bullet2.setDirection(Math.cos(angle2), Math.sin(angle2));
-        
-        splitBullets.add(bullet1);
-        splitBullets.add(bullet2);
-    }
+    splitBullets = new ArrayList<>();
+    
+    // Create new bullets with same properties as parent
+    Bullet bullet1 = new Bullet(x, y, width, height, isFromLeftPlayer);
+    bullet1.bulletImage = this.bulletImage; // Share the same bullet image
+    bullet1.setDirection(Math.cos(angle1), Math.sin(angle1));
+    
+    Bullet bullet2 = new Bullet(x, y, width, height, isFromLeftPlayer);
+    bullet2.bulletImage = this.bulletImage; // Share the same bullet image
+    bullet2.setDirection(Math.cos(angle2), Math.sin(angle2));
+    
+    splitBullets.add(bullet1);
+    splitBullets.add(bullet2);
+}
 
     // Resize bullet for BigBullet powerup
     public void resize(double scaleFactor) {
