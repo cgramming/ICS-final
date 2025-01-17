@@ -2,7 +2,7 @@
 * Swapnil Kabir and Syed Bazif Shah
 * Date: January 17, 2025
 * Description: GamePanel class manages game objects, rendering,
-* and primary game loop for the Duel game.
+* and primary game loop for the Top-Down Duel game.
 */
 
 import java.awt.*;
