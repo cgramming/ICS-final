@@ -255,71 +255,75 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Manages shooting logic for both players
    private void handlePlayerShoot(Player shooter, Player otherPlayer, boolean isLeftPlayer) {
-        if (canShoot && shooter.hasGun()) {
-            // Handle first player's shot
-            if (!firstPlayerHasShot) {
-                firstPlayerHasShot = true;
-                firstShootingPlayer = shooter;
-                shooter.setHasGun(false);
-                
-                if (isLeftPlayer) {
-                    cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
-                    isLeftPlayerShooting = true;
-                    leftPlayerShootStartTime = System.currentTimeMillis();
-                    bulletLeft = new Bullet(
-                        shooter.x + shooter.width,
-                        shooter.y + shooter.height/2,
-                        bulletWidth, bulletHeight,
-                        true
-                    );
-                } else {
-                    cleanupBullet(bulletRight);  // Clean up old bullet if it exists
-                    isRightPlayerShooting = true;
-                    rightPlayerShootStartTime = System.currentTimeMillis();
-                    bulletRight = new Bullet(
-                        shooter.x - bulletWidth,
-                        shooter.y + shooter.height/2,
-                        bulletWidth, bulletHeight,
-                        false
-                    );
-                }
-                shooter.shoot(System.currentTimeMillis());
+    if (canShoot && shooter.hasGun()) {
+        // Handle first player's shot
+        if (!firstPlayerHasShot) {
+            firstPlayerHasShot = true;
+            firstShootingPlayer = shooter;
+            shooter.setHasGun(false);
+            
+            if (isLeftPlayer) {
+                cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
+                isLeftPlayerShooting = true;
+                leftPlayerShootStartTime = System.currentTimeMillis();
+                bulletLeft = new Bullet(
+                    shooter.x + shooter.width,
+                    shooter.y + shooter.height/2,
+                    bulletWidth, bulletHeight,
+                    true
+                );
+                soundManager.playBulletSound();  // Play sound when left player shoots
+            } else {
+                cleanupBullet(bulletRight);  // Clean up old bullet if it exists
+                isRightPlayerShooting = true;
+                rightPlayerShootStartTime = System.currentTimeMillis();
+                bulletRight = new Bullet(
+                    shooter.x - bulletWidth,
+                    shooter.y + shooter.height/2,
+                    bulletWidth, bulletHeight,
+                    false
+                );
+                soundManager.playBulletSound();  // Play sound when right player shoots
             }
-            // Handle second player's shot
-            else if (!secondPlayerHasShot && shooter != firstShootingPlayer) {
-                secondPlayerHasShot = true;
-                secondShootingPlayer = shooter;
-                shooter.setHasGun(false);
-                
-                if (isLeftPlayer) {
-                    cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
-                    isLeftPlayerShooting = true;
-                    leftPlayerShootStartTime = System.currentTimeMillis();
-                    bulletLeft = new Bullet(
-                        shooter.x + shooter.width,
-                        shooter.y + shooter.height/2,
-                        bulletWidth, bulletHeight,
-                        true
-                    );
-                } else {
-                    cleanupBullet(bulletRight);  // Clean up old bullet if it exists
-                    isRightPlayerShooting = true;
-                    rightPlayerShootStartTime = System.currentTimeMillis();
-                    bulletRight = new Bullet(
-                        shooter.x - bulletWidth,
-                        shooter.y + shooter.height/2,
-                        bulletWidth, bulletHeight,
-                        false
-                    );
-                }
-                shooter.shoot(System.currentTimeMillis());
-                canShoot = false;
-            }
-        } else if (!shooter.hasGun()) {
-            shooter.setYDirection(-shooter.getYDirection());
-            shooter.move();
+            shooter.shoot(System.currentTimeMillis());
         }
+        // Handle second player's shot
+        else if (!secondPlayerHasShot && shooter != firstShootingPlayer) {
+            secondPlayerHasShot = true;
+            secondShootingPlayer = shooter;
+            shooter.setHasGun(false);
+            
+            if (isLeftPlayer) {
+                cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
+                isLeftPlayerShooting = true;
+                leftPlayerShootStartTime = System.currentTimeMillis();
+                bulletLeft = new Bullet(
+                    shooter.x + shooter.width,
+                    shooter.y + shooter.height/2,
+                    bulletWidth, bulletHeight,
+                    true
+                );
+                soundManager.playBulletSound();  // Play sound when left player shoots
+            } else {
+                cleanupBullet(bulletRight);  // Clean up old bullet if it exists
+                isRightPlayerShooting = true;
+                rightPlayerShootStartTime = System.currentTimeMillis();
+                bulletRight = new Bullet(
+                    shooter.x - bulletWidth,
+                    shooter.y + shooter.height/2,
+                    bulletWidth, bulletHeight,
+                    false
+                );
+                soundManager.playBulletSound();  // Play sound when right player shoots
+            }
+            shooter.shoot(System.currentTimeMillis());
+            canShoot = false;
+        }
+    } else if (!shooter.hasGun()) {
+        shooter.setYDirection(-shooter.getYDirection());
+        shooter.move();
     }
+}
 
    // Handles bullet clearing and turn management
    private void handleBulletCleared() {
@@ -418,6 +422,19 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     String powerupType = powerup.activatePowerup(powerupPosition, currentBullet, 
                         currentBullet.isFromLeftPlayer() ? playerRight : playerLeft);
                     powerup.getPowerupPositions().remove(powerupPosition);
+                    
+                    // Play appropriate powerup sound
+                    switch (powerupType) {
+                        case "Bomb":
+                            soundManager.playBombSound();
+                            break;
+                        case "Freeze":
+                            soundManager.playFreezeSound();
+                            break;
+                        case "BigBullet":
+                            soundManager.playBigBulletSound();
+                            break;
+                    }
                     break;
                 }
             }
@@ -426,6 +443,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
             for (Point obstaclePosition : new ArrayList<>(obstacle.getObstaclePositions())) {
                 Point obstacleCenter = obstacle.getCircleCenter(obstaclePosition);
                 if (currentBullet.bulletBounce(obstacleCenter, obstaclePosition, obstacle, currentBullet)) {
+                    soundManager.playObstacleBounce();  // Play sound when bullet bounces off obstacle
                     break;
                 }
             }
@@ -518,11 +536,13 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    
    // Pauses the game when the player opens the pause menu
    public void setPaused(boolean paused) {
-       this.isPaused = paused;
+    this.isPaused = paused;
+    soundManager.playPauseAndPlay();
    }
 
    // Returns directly to the main menu (used when the "Main Menu" button is pressed in the pause menu or end screen
    public void returnToMainMenu() {
+       soundManager.adjustBackgroundMusicVolume(true);
        gameStarted = false;
        isPaused = false;
        pauseMenu.setVisible(false);

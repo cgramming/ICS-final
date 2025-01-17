@@ -5,9 +5,9 @@
  * It also manages the background music and adjusts the volume of each sound.
  */
 
-import javax.sound.sampled.*;
 import java.io.IOException;
 import java.net.URL;
+import javax.sound.sampled.*;
 
 public class SoundManager {
     private Clip backgroundMusic;
@@ -31,7 +31,6 @@ public class SoundManager {
             pausePlaySound = loadClip("/audio/PauseAndPlay.wav", -10.0f);
             bulletSound = loadClip("/audio/Bullet.wav", -10.0f);
             obstacleBounceSound = loadClip("/audio/ObstacleBounce.wav", -10.0f);
-            wallBounceSound = loadClip("/audio/WallBounce.wav", -10.0f);
             bombSound = loadClip("/audio/Bomb.wav", -5.0f);
             freezeSound = loadClip("/audio/Freeze.wav", -5.0f);
             bigBulletSound = loadClip("/audio/BigBullet.wav", -5.0f);
@@ -99,10 +98,6 @@ public class SoundManager {
 
     public void playObstacleBounce() {
         playSound(obstacleBounceSound);
-    }
-
-    public void playWallBounce() {
-        playSound(wallBounceSound);
     }
 
     public void playBombSound() {
