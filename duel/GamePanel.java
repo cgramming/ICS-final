@@ -373,35 +373,40 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
     private void handleBulletCollisions(Bullet bullet) {
     if (bullet == null) return;
     
+    // Create list of bullets to process (main bullet and any split bullets)
     ArrayList<Bullet> bulletsToProcess = new ArrayList<>();
     bulletsToProcess.add(bullet);
     if (bullet.hasSplitBullets()) {
         bulletsToProcess.addAll(bullet.getSplitBullets());
     }
     
+    // Track bullets that need to be removed
     ArrayList<Bullet> bulletsToRemove = new ArrayList<>();
     
+    // Process each bullet individually
     for (Bullet currentBullet : bulletsToProcess) {
         boolean shouldRemoveBullet = false;
         
-        // Check player collisions with invincibility
+        // Check player collisions
         if (currentBullet.isFromLeftPlayer()) {
-            if (!playerRight.isInvincible() && currentBullet.collidesWith(playerRight)) {
+            if (currentBullet.collidesWith(playerRight)) {
                 score.scoreLeftPlayer();
-                playerRight.makeInvincible();
                 shouldRemoveBullet = true;
-                soundManager.playHitSound();
+            } else if (currentBullet.collidesWith(playerLeft)) {
+                score.scoreRightPlayer();
+                shouldRemoveBullet = true;
             }
         } else {
-            if (!playerLeft.isInvincible() && currentBullet.collidesWith(playerLeft)) {
+            if (currentBullet.collidesWith(playerLeft)) {
                 score.scoreRightPlayer();
-                playerLeft.makeInvincible();
                 shouldRemoveBullet = true;
-                soundManager.playHitSound();
+            } else if (currentBullet.collidesWith(playerRight)) {
+                score.scoreLeftPlayer();
+                shouldRemoveBullet = true;
             }
         }
         
-        if (!shouldRemoveBullet) {
+        if (!shouldRemoveBullet) {  // Only process further if bullet hasn't hit a player
             // Check powerup collisions
             for (Point powerupPosition : new ArrayList<>(powerup.getPowerupPositions())) {
                 Point powerupCenter = powerup.getCircleCenter(powerupPosition);
@@ -415,48 +420,67 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 );
 
                 if (powerup.lineIntersectsCircle(powerupCenter, bulletPrevCenter, bulletCenter)) {
-                    String powerupType = powerup.activatePowerup(powerupPosition, currentBullet,
+                    String powerupType = powerup.activatePowerup(powerupPosition, currentBullet, 
                         currentBullet.isFromLeftPlayer() ? playerRight : playerLeft);
-                    if (powerupType != null) { // Only remove if powerup was actually activated
-                        powerup.getPowerupPositions().remove(powerupPosition);
-                        // Play appropriate powerup sound
-                        switch (powerupType) {
-                            case "Bomb":
-                                soundManager.playBombSound();
-                                break;
-                            case "Freeze":
-                                soundManager.playFreezeSound();
-                                break;
-                            case "BigBullet":
-                                soundManager.playBigBulletSound();
-                                break;
-                        }
+                    powerup.getPowerupPositions().remove(powerupPosition);
+                    
+                    // Play appropriate powerup sound
+                    switch (powerupType) {
+                        case "Bomb":
+                            soundManager.playBombSound();
+                            break;
+                        case "Freeze":
+                            soundManager.playFreezeSound();
+                            break;
+                        case "BigBullet":
+                            soundManager.playBigBulletSound();
+                            break;
                     }
                     break;
                 }
             }
+            
+            // Check obstacle collisions
+            for (Point obstaclePosition : new ArrayList<>(obstacle.getObstaclePositions())) {
+                Point obstacleCenter = obstacle.getCircleCenter(obstaclePosition);
+                if (currentBullet.bulletBounce(obstacleCenter, obstaclePosition, obstacle, currentBullet)) {
+                    soundManager.playObstacleBounce();  // Play sound when bullet bounces off obstacle
+                    break;
+                }
+            }
+            
+            // Check if bullet is out of bounds
+            if (currentBullet.isOutOfBounds(GAME_WIDTH)) {
+                shouldRemoveBullet = true;
+            }
         }
         
+        // Add bullet to removal list if necessary
         if (shouldRemoveBullet) {
             bulletsToRemove.add(currentBullet);
         }
     }
     
-    // Remove bullets that hit players
+    // Remove bullets that need to be removed
     for (Bullet bulletToRemove : bulletsToRemove) {
         if (bulletToRemove == bullet) {
+            // This is the main bullet
             if (bullet == bulletLeft) {
                 bulletLeft = null;
             } else {
                 bulletRight = null;
             }
         } else {
+            // This is a split bullet, remove it from its parent's split bullets list
             bullet.getSplitBullets().remove(bulletToRemove);
         }
     }
     
-    // Handle bullet cleared if needed
-    if (bulletLeft == null && bulletRight == null) {
+    // Check if we need to handle bullet cleared
+    if ((bulletLeft == null || 
+         (bulletLeft != null && !bulletLeft.hasSplitBullets())) && 
+        (bulletRight == null || 
+         (bulletRight != null && !bulletRight.hasSplitBullets()))) {
         handleBulletCleared();
     }
 }

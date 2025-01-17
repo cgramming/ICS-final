@@ -19,7 +19,6 @@ public class SoundManager {
     private Clip bombSound;
     private Clip freezeSound;
     private Clip bigBulletSound;
-    private Clip hitSound;
 
     public SoundManager() {
         loadSounds();
@@ -35,7 +34,6 @@ public class SoundManager {
             bombSound = loadClip("/audio/Bomb.wav", -5.0f);
             freezeSound = loadClip("/audio/Freeze.wav", -5.0f);
             bigBulletSound = loadClip("/audio/BigBullet.wav", -5.0f);
-            hitSound = loadClip("/audio/Hit.wav", -5.0f);
         } catch (Exception e) {
             System.err.println("Error loading sounds: " + e.getMessage());
         }
@@ -112,10 +110,6 @@ public class SoundManager {
 
     public void playBigBulletSound() {
         playSound(bigBulletSound);
-    }
-
-    public void playHitSound() {
-        playSound(hitSound);
     }
 
     private void playSound(Clip clip) {

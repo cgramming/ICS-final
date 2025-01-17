@@ -26,8 +26,6 @@ public class Powerup {
     private int circleRadius;
     private static final double COLLISION_RADIUS_MULTIPLIER = 0.45; // Aligned with Obstacle class
     private Obstacle obstacle;
-    private Map<Point, Long> spawnTimes;
-    private static final long SPAWN_INVINCIBILITY_DURATION = 500; // 0.5 seconds
 
     // Constructor initializes game dimensions, map manager, and powerup collections
     public Powerup(int gameWidth, int gameHeight, MapManager mapManager) {
@@ -39,7 +37,6 @@ public class Powerup {
         this.powerupImages = new HashMap<>();
         this.powerupTypes = new HashMap<>();
         this.usedPowerups = new HashMap<>();
-        this.spawnTimes = new HashMap<>();
     }
 
     // Loads and processes the powerup image, sets circle radius, and determines powerup type
@@ -222,11 +219,6 @@ public class Powerup {
 
     // Manages functionality of different powerups, tells game which one to activate
     public String activatePowerup(Point position, Bullet bullet, Player otherPlayer) {
-        Long spawnTime = spawnTimes.get(position);
-        if (spawnTime != null && 
-        System.currentTimeMillis() - spawnTime < SPAWN_INVINCIBILITY_DURATION) {
-        return null; // Powerup is still invincible
-        }
         String powerupType = powerupTypes.get(position);
         powerupPositions.remove(position);
         powerupImages.remove(position);
@@ -258,7 +250,7 @@ public class Powerup {
                 bullet.resize(2.0);
                 break;
         }
-        spawnTimes.remove(position);
+        
         return type;
     }
 
