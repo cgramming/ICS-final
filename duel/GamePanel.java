@@ -44,7 +44,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    private BufferedImage backgroundImage;
    // Turn and bullet management
    private long lastBulletClearTime;
-   private static final long BULLET_RESET_DELAY = 1000; // 1 second delay
+   private static final long BULLET_RESET_DELAY = 1000; // 0.5 second delay before players get their guns back
    private boolean canShoot = true;
    private boolean firstPlayerHasShot = false;
    private boolean secondPlayerHasShot = false;
@@ -140,18 +140,22 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    
 // Initialize all game objects
    private void initializeGameObjects() {
-       playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-       playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-       bulletLeft = null;
-       bulletRight = null;
-       
-       // Reset shooting states
-       canShoot = true;
-       firstPlayerHasShot = false;
-       secondPlayerHasShot = false;
-       firstShootingPlayer = null;
-       secondShootingPlayer = null;
-   }
+        playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+        bulletLeft = null;
+        bulletRight = null;
+        
+        // Reset shooting states
+        canShoot = true;
+        firstPlayerHasShot = false;
+        secondPlayerHasShot = false;
+        firstShootingPlayer = null;
+        secondShootingPlayer = null;
+        
+        // Ensure both players start with guns
+        playerLeft.setHasGun(true);
+        playerRight.setHasGun(true);
+    }
    
    // Paints the game components
    public void paint(Graphics g) {
@@ -256,95 +260,120 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 
    // Manages shooting logic for both players
    private void handlePlayerShoot(Player shooter, Player otherPlayer, boolean isLeftPlayer) {
-    if (canShoot && shooter.hasGun()) {
-        // Handle first player's shot
-        if (!firstPlayerHasShot) {
-            firstPlayerHasShot = true;
-            firstShootingPlayer = shooter;
-            shooter.setHasGun(false);
-            
-            if (isLeftPlayer) {
-                cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
-                isLeftPlayerShooting = true;
-                leftPlayerShootStartTime = System.currentTimeMillis();
-                bulletLeft = new Bullet(
-                    shooter.x + shooter.width,
-                    shooter.y + shooter.height/2,
-                    bulletWidth, bulletHeight,
-                    true
-                );
-                soundManager.playBulletSound();  // Play sound when left player shoots
-            } else {
-                cleanupBullet(bulletRight);  // Clean up old bullet if it exists
-                isRightPlayerShooting = true;
-                rightPlayerShootStartTime = System.currentTimeMillis();
-                bulletRight = new Bullet(
-                    shooter.x - bulletWidth,
-                    shooter.y + shooter.height/2,
-                    bulletWidth, bulletHeight,
-                    false
-                );
-                soundManager.playBulletSound();  // Play sound when right player shoots
+        if (canShoot && shooter.hasGun()) {
+            // Handle first player's shot
+            if (!firstPlayerHasShot) {
+                firstPlayerHasShot = true;
+                firstShootingPlayer = shooter;
+                shooter.setHasGun(false);
+                
+                if (isLeftPlayer) {
+                    cleanupBullet(bulletLeft);
+                    isLeftPlayerShooting = true;
+                    leftPlayerShootStartTime = System.currentTimeMillis();
+                    bulletLeft = new Bullet(
+                        shooter.x + shooter.width,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        true
+                    );
+                    soundManager.playBulletSound();
+                } else {
+                    cleanupBullet(bulletRight);
+                    isRightPlayerShooting = true;
+                    rightPlayerShootStartTime = System.currentTimeMillis();
+                    bulletRight = new Bullet(
+                        shooter.x - bulletWidth,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        false
+                    );
+                    soundManager.playBulletSound();
+                }
+                shooter.shoot(System.currentTimeMillis());
             }
-            shooter.shoot(System.currentTimeMillis());
-        }
-        // Handle second player's shot
-        else if (!secondPlayerHasShot && shooter != firstShootingPlayer) {
-            secondPlayerHasShot = true;
-            secondShootingPlayer = shooter;
-            shooter.setHasGun(false);
-            
-            if (isLeftPlayer) {
-                cleanupBullet(bulletLeft);  // Clean up old bullet if it exists
-                isLeftPlayerShooting = true;
-                leftPlayerShootStartTime = System.currentTimeMillis();
-                bulletLeft = new Bullet(
-                    shooter.x + shooter.width,
-                    shooter.y + shooter.height/2,
-                    bulletWidth, bulletHeight,
-                    true
-                );
-                soundManager.playBulletSound();  // Play sound when left player shoots
-            } else {
-                cleanupBullet(bulletRight);  // Clean up old bullet if it exists
-                isRightPlayerShooting = true;
-                rightPlayerShootStartTime = System.currentTimeMillis();
-                bulletRight = new Bullet(
-                    shooter.x - bulletWidth,
-                    shooter.y + shooter.height/2,
-                    bulletWidth, bulletHeight,
-                    false
-                );
-                soundManager.playBulletSound();  // Play sound when right player shoots
+            // Handle second player's shot
+            else if (!secondPlayerHasShot && shooter != firstShootingPlayer) {
+                secondPlayerHasShot = true;
+                secondShootingPlayer = shooter;
+                shooter.setHasGun(false);
+                
+                if (isLeftPlayer) {
+                    cleanupBullet(bulletLeft);
+                    isLeftPlayerShooting = true;
+                    leftPlayerShootStartTime = System.currentTimeMillis();
+                    bulletLeft = new Bullet(
+                        shooter.x + shooter.width,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        true
+                    );
+                    soundManager.playBulletSound();
+                } else {
+                    cleanupBullet(bulletRight);
+                    isRightPlayerShooting = true;
+                    rightPlayerShootStartTime = System.currentTimeMillis();
+                    bulletRight = new Bullet(
+                        shooter.x - bulletWidth,
+                        shooter.y + shooter.height/2,
+                        bulletWidth, bulletHeight,
+                        false
+                    );
+                    soundManager.playBulletSound();
+                }
+                shooter.shoot(System.currentTimeMillis());
+                canShoot = false;  // Prevent further shooting until bullets are cleared
             }
-            shooter.shoot(System.currentTimeMillis());
-            canShoot = false;
+        } else if (!shooter.hasGun()) {
+            shooter.setYDirection(-shooter.getYDirection());
+            shooter.move();
         }
-    } else if (!shooter.hasGun()) {
-        shooter.setYDirection(-shooter.getYDirection());
-        shooter.move();
     }
-}
+
 
    // Handles bullet clearing and turn management
    private void handleBulletCleared() {
-       // Check if both bullets are gone after both players shot
-       if (firstPlayerHasShot && secondPlayerHasShot && 
-           bulletLeft == null && bulletRight == null && !canShoot) {
-           lastBulletClearTime = System.currentTimeMillis();
-       }
-   }
+        boolean leftBulletCleared = bulletLeft == null || 
+            (bulletLeft != null && !bulletLeft.hasSplitBullets());
+        boolean rightBulletCleared = bulletRight == null || 
+            (bulletRight != null && !bulletRight.hasSplitBullets());
+            
+        // Only reset when both players have shot AND all bullets are cleared
+        if (firstPlayerHasShot && secondPlayerHasShot && 
+            leftBulletCleared && rightBulletCleared) {
+            lastBulletClearTime = System.currentTimeMillis();
+            // Wait for BULLET_RESET_DELAY before resetting
+            if (System.currentTimeMillis() - lastBulletClearTime >= BULLET_RESET_DELAY) {
+                resetBullets();
+            }
+        }
+    }
 
    // Resets bullet and turn state for new round
-   private void resetBullets() {
-       canShoot = true;
-       firstPlayerHasShot = false;
-       secondPlayerHasShot = false;
-       firstShootingPlayer = null;
-       secondShootingPlayer = null;
-       playerLeft.setHasGun(true);
-       playerRight.setHasGun(true);
-   }
+    private void resetBullets() {
+        // Only reset if both bullets are cleared
+        boolean leftBulletCleared = bulletLeft == null || 
+            (bulletLeft != null && !bulletLeft.hasSplitBullets());
+        boolean rightBulletCleared = bulletRight == null || 
+            (bulletRight != null && !bulletRight.hasSplitBullets());
+            
+        if (leftBulletCleared && rightBulletCleared) {
+            // Reset all shooting states
+            canShoot = true;
+            firstPlayerHasShot = false;
+            secondPlayerHasShot = false;
+            firstShootingPlayer = null;
+            secondShootingPlayer = null;
+            
+            // Give BOTH players their guns back simultaneously
+            playerLeft.setHasGun(true);
+            playerRight.setHasGun(true);
+            
+            // Reset bullets
+            bulletLeft = null;
+            bulletRight = null;
+        }
+    }
 
    // Removes bullets from the game when necessary
    private void cleanupBullet(Bullet bullet) {
