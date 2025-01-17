@@ -24,6 +24,8 @@ public class Obstacle {
     private int circleRadius; // Radius for collision detection
     private static final double COLLISION_RADIUS_MULTIPLIER = 0.45; // Aligned with Powerup class
     private Powerup powerup;
+    private static final long INVINCIBILITY_DURATION = 500; // 0.5 seconds in milliseconds
+    private Map<Point, Long> spawnTimes; // Track when obstacles spawn
 
     public Obstacle(int gameWidth, int gameHeight, MapManager mapManager) {
         this.GAME_WIDTH = gameWidth;
@@ -32,6 +34,7 @@ public class Obstacle {
         this.random = new Random();
         this.obstaclePositions = new ArrayList<>();
         this.brokenObstacles = new HashMap<>();
+        this.spawnTimes = new HashMap<>();
         loadObstacleImage();
     }
 
@@ -76,19 +79,20 @@ public class Obstacle {
     int totalAttempts = 0;
 
     while (successfulPlacements < count && totalAttempts < maxAttempts) {
-        //randomly places obstacles within margins
+        // Randomly places obstacles within margins
         int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
         int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
         Point newPoint = new Point(x, y);
-        //does not place power up where there is already an obstacle
+        // Does not place powerup where there is already an obstacle
         if (!checkOverlap(newPoint, powerupPositions) && 
             !obstaclePositions.contains(newPoint)) {
             obstaclePositions.add(newPoint);
+            spawnTimes.put(newPoint, System.currentTimeMillis()); // Track spawn time
             successfulPlacements++;
-            }
-        totalAttempts++;
         }
+        totalAttempts++;
     }
+}
 
     // Get circle center point from obstacle position
     public Point getCircleCenter(Point obstaclePosition) {
@@ -109,6 +113,20 @@ public class Obstacle {
 
     // Check if a line segment intersects with circle
     public boolean lineIntersectsCircle(Point center, Point lineStart, Point lineEnd) {
+        // Find the obstacle position for this center point
+        Point obstaclePos = null;
+            for (Point p : obstaclePositions) {
+            if (getCircleCenter(p).equals(center)) {
+                    obstaclePos = p;
+                break;
+            }
+        }
+    
+        // Check invincibility before allowing collision
+        if (obstaclePos != null && isInvincible(obstaclePos)) {
+            return false;
+        }
+        
         // Vector from line start to circle center
         double cx = center.x - lineStart.x;
         double cy = center.y - lineStart.y;
@@ -232,6 +250,13 @@ public class Obstacle {
     public void breakObstacle(Point position) {
         obstaclePositions.remove(position);
         brokenObstacles.put(position, System.currentTimeMillis());
+    }
+
+    // Check if an obstacle is invincible
+    private boolean isInvincible(Point position) {
+        Long spawnTime = spawnTimes.get(position);
+        return spawnTime != null && 
+            System.currentTimeMillis() - spawnTime < INVINCIBILITY_DURATION;
     }
 
     // Returns the list of current obstacle positions

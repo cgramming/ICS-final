@@ -26,6 +26,8 @@ public class Powerup {
     private int circleRadius;
     private static final double COLLISION_RADIUS_MULTIPLIER = 0.45; // Aligned with Obstacle class
     private Obstacle obstacle;
+    private static final long INVINCIBILITY_DURATION = 500; // 0.5 seconds in milliseconds
+    private Map<Point, Long> spawnTimes; // Track when powerups spawn
 
     // Constructor initializes game dimensions, map manager, and powerup collections
     public Powerup(int gameWidth, int gameHeight, MapManager mapManager) {
@@ -37,6 +39,7 @@ public class Powerup {
         this.powerupImages = new HashMap<>();
         this.powerupTypes = new HashMap<>();
         this.usedPowerups = new HashMap<>();
+        this.spawnTimes = new HashMap<>();
     }
 
     // Loads and processes the powerup image, sets circle radius, and determines powerup type
@@ -76,19 +79,20 @@ public class Powerup {
         int totalAttempts = 0;
 
         while (successfulPlacements < count && totalAttempts < maxAttempts) {
-            int x = middleStart + random.nextInt(middleWidth - 50); // Using 50 as default width
-            int y = topMargin + random.nextInt(usableHeight - 50); // Using 50 as default height
-            Point newPoint = new Point(x, y);
-            
-            if (!checkOverlap(newPoint, obstaclePositions) && 
-                !powerupPositions.contains(newPoint)) {
-                powerupPositions.add(newPoint);
-                loadPowerupImage(newPoint); // Load random powerup image for this position
-                successfulPlacements++;
-            }
-            totalAttempts++;
+        int x = middleStart + random.nextInt(middleWidth - 50);
+        int y = topMargin + random.nextInt(usableHeight - 50);
+        Point newPoint = new Point(x, y);
+        
+        if (!checkOverlap(newPoint, obstaclePositions) && 
+            !powerupPositions.contains(newPoint)) {
+            powerupPositions.add(newPoint);
+            loadPowerupImage(newPoint);
+            spawnTimes.put(newPoint, System.currentTimeMillis()); // Track spawn time
+            successfulPlacements++;
         }
+        totalAttempts++;
     }
+}
 
     // Get circle center point from powerup position
     public Point getCircleCenter(Point powerupPosition) {
@@ -104,6 +108,21 @@ public class Powerup {
 
     // Check if a line segment intersects with circle (for bullet collision)
     public boolean lineIntersectsCircle(Point center, Point lineStart, Point lineEnd) {
+        // Find the powerup position for this center point
+    Point powerupPos = null;
+    for (Point p : powerupPositions) {
+        if (getCircleCenter(p).equals(center)) {
+            powerupPos = p;
+            break;
+        }
+    }
+    
+    // Check invincibility before allowing collision
+    if (powerupPos != null && isInvincible(powerupPos)) {
+        return false;
+    }
+
+    // Check if a line segment intersects with circle (for bullet collision)
         double cx = center.x - lineStart.x;
         double cy = center.y - lineStart.y;
         double dx = lineEnd.x - lineStart.x;
@@ -260,6 +279,13 @@ public class Powerup {
         powerupImages.clear();
         powerupTypes.clear();
         generatePowerupPositions(obstaclePositions);
+    }
+
+    // Check if a powerup is invincible
+    private boolean isInvincible(Point position) {
+        Long spawnTime = spawnTimes.get(position);
+        return spawnTime != null && 
+            System.currentTimeMillis() - spawnTime < INVINCIBILITY_DURATION;
     }
 
     // Returns the current powerup image (for use by Obstacle class)
