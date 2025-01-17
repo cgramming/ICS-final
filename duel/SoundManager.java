@@ -26,7 +26,7 @@ public class SoundManager {
 
     private void loadSounds() {
         try {
-            backgroundMusic = loadClip("/audio/BackgroundMusic.wav", -20.0f);
+            backgroundMusic = loadClip("/audio/BackgroundMusic.wav", -30.0f);
             gameStartSound = loadClip("/audio/GameStart.wav", -10.0f);
             pausePlaySound = loadClip("/audio/PauseAndPlay.wav", -10.0f);
             bulletSound = loadClip("/audio/Bullet.wav", -10.0f);
@@ -66,7 +66,7 @@ public class SoundManager {
 
     public void adjustBackgroundMusicVolume(boolean isMainMenu) {
         if (backgroundMusic != null) {
-            float volume = isMainMenu ? -20.0f : -30.0f;  // Louder on main menu
+            float volume = isMainMenu ? -30.0f : -40.0f;  // Louder on main menu
             setVolume(backgroundMusic, volume);
         }
     }
