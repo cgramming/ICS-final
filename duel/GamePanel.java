@@ -61,6 +61,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    public GamePanel() {
        // Initialize sound manager
        soundManager = new SoundManager();
+       soundManager.playBackgroundMusic(); 
 
        // Initialize map manager and pass to Obstacle, Powerup
        mapManager = new MapManager();
