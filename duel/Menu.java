@@ -26,8 +26,7 @@ public class Menu extends JPanel {
         "Your aim is to shoot your opponent and avoid their bullets.\n" +
         "Powerups and bullets spawn intermittently throughout the map.\n" +
         "Powerups activate certain effects when bullets are shot through them, while obstacles cause bullets to bounce off of them.\n" +
-        "Use these abilities to your advantage. The first player to 10 points wins!"   
-        ;
+        "Use these abilities to your advantage. The first player to 10 points wins!";
     
     // Main menu panel
     private JPanel mainMenuPanel;
