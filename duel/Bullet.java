@@ -155,7 +155,6 @@ public class Bullet extends Rectangle {
                     dx /= length;
                     dy /= length;
 
-                    System.out.println(dx);
                     if(dx <= 0 && dx >= -0.1) dx = -0.1;
                     else if (dx > 0 && dx <= 0.1) dx = 0.1;
                     
