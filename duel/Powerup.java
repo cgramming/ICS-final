@@ -19,6 +19,7 @@ public class Powerup {
     private Map<Point, String> powerupTypes;
     private ArrayList<Point> powerupPositions;
     private Map<Point, Long> usedPowerups;
+    private Map<Point, Long> spawnTimes; // Track when powerups spawn
     private static final long REGENERATION_DELAY = 7000; // 7 seconds
     private static final int TARGET_POWERUPS = 3;
     private Random random;
@@ -27,7 +28,6 @@ public class Powerup {
     private static final double COLLISION_RADIUS_MULTIPLIER = 0.45; // Aligned with Obstacle class
     private Obstacle obstacle;
     private static final long INVINCIBILITY_DURATION = 500; // 0.5 seconds in milliseconds
-    private Map<Point, Long> spawnTimes; // Track when powerups spawn
 
     // Constructor initializes game dimensions, map manager, and powerup collections
     public Powerup(int gameWidth, int gameHeight, MapManager mapManager) {

@@ -17,6 +17,7 @@ public class Obstacle {
     private BufferedImage obstacleImage;
     private ArrayList<Point> obstaclePositions;
     private Map<Point, Long> brokenObstacles;
+    private Map<Point, Long> spawnTimes; // Track when obstacles spawn
     private static final long REGENERATION_DELAY = 5000;
     private static final int TARGET_OBSTACLES = 5;
     private Random random;
@@ -25,7 +26,6 @@ public class Obstacle {
     private static final double COLLISION_RADIUS_MULTIPLIER = 0.45; // Aligned with Powerup class
     private Powerup powerup;
     private static final long INVINCIBILITY_DURATION = 500; // 0.5 seconds in milliseconds
-    private Map<Point, Long> spawnTimes; // Track when obstacles spawn
 
     public Obstacle(int gameWidth, int gameHeight, MapManager mapManager) {
         this.GAME_WIDTH = gameWidth;
