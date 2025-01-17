@@ -561,7 +561,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
 	// Ends the game once a player reaches 10 points
    private void checkWinCondition() {
        if (score.getLeftPlayerScore() >= 10 || score.getRightPlayerScore() >= 10) {
-           gameStarted = false;
+           //gameStarted = false;
            pauseMenu.setVisible(false);
            
            if (score.getLeftPlayerScore() >= 10) {
