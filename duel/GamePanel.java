@@ -2,7 +2,7 @@
 * Swapnil Kabir and Syed Bazif Shah
 * Date: January 17, 2025
 * Description: GamePanel class manages game objects, rendering,
-* and primary game loop for the Duel game.
+* and primary game loop for the Top-Down Duel game.
 */
 
 import java.awt.*;
@@ -44,7 +44,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    private BufferedImage backgroundImage;
    // Turn and bullet management
    private long lastBulletClearTime;
-   private static final long BULLET_RESET_DELAY = 1000; // 0.5 second delay before players get their guns back
+   private static final long BULLET_RESET_DELAY = 1000; // 1 second delay
    private boolean canShoot = true;
    private boolean firstPlayerHasShot = false;
    private boolean secondPlayerHasShot = false;
@@ -140,22 +140,18 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
    
 // Initialize all game objects
    private void initializeGameObjects() {
-        playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-        playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
-        bulletLeft = null;
-        bulletRight = null;
-        
-        // Reset shooting states
-        canShoot = true;
-        firstPlayerHasShot = false;
-        secondPlayerHasShot = false;
-        firstShootingPlayer = null;
-        secondShootingPlayer = null;
-        
-        // Ensure both players start with guns
-        playerLeft.setHasGun(true);
-        playerRight.setHasGun(true);
-    }
+       playerLeft = new Player(50, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+       playerRight = new Player(GAME_WIDTH - 75, GAME_HEIGHT / 2, 25, 100, GAME_HEIGHT, true);
+       bulletLeft = null;
+       bulletRight = null;
+       
+       // Reset shooting states
+       canShoot = true;
+       firstPlayerHasShot = false;
+       secondPlayerHasShot = false;
+       firstShootingPlayer = null;
+       secondShootingPlayer = null;
+   }
    
    // Paints the game components
    public void paint(Graphics g) {
@@ -342,40 +338,29 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
         boolean rightBulletCleared = bulletRight == null || 
             (bulletRight != null && !bulletRight.hasSplitBullets());
             
-        // Only reset when both players have shot AND all bullets are cleared
+        // Only proceed if both players have shot AND both bullets are cleared
         if (firstPlayerHasShot && secondPlayerHasShot && 
             leftBulletCleared && rightBulletCleared) {
             lastBulletClearTime = System.currentTimeMillis();
-            // Wait for BULLET_RESET_DELAY before resetting
-            if (System.currentTimeMillis() - lastBulletClearTime >= BULLET_RESET_DELAY) {
-                resetBullets();
-            }
+            resetBullets();
         }
     }
 
    // Resets bullet and turn state for new round
-    private void resetBullets() {
-        // Only reset if both bullets are cleared
+   private void resetBullets() {
         boolean leftBulletCleared = bulletLeft == null || 
             (bulletLeft != null && !bulletLeft.hasSplitBullets());
         boolean rightBulletCleared = bulletRight == null || 
             (bulletRight != null && !bulletRight.hasSplitBullets());
             
         if (leftBulletCleared && rightBulletCleared) {
-            // Reset all shooting states
             canShoot = true;
             firstPlayerHasShot = false;
             secondPlayerHasShot = false;
             firstShootingPlayer = null;
             secondShootingPlayer = null;
-            
-            // Give BOTH players their guns back simultaneously
             playerLeft.setHasGun(true);
             playerRight.setHasGun(true);
-            
-            // Reset bullets
-            bulletLeft = null;
-            bulletRight = null;
         }
     }
 
