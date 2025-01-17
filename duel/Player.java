@@ -32,9 +32,14 @@ public class Player extends Rectangle {
    private static final long FREEZE_DURATION = 4000; // 4 seconds in milliseconds
    private boolean isFrozen = false;
    private long freezeStartTime = 0;
+
+   // Invicibility tracking
+   private boolean isInvincible = false;
+   private long invincibilityStartTime = 0;
+   private static final long PLAYER_INVINCIBILITY_DURATION = 3000; // 3 seconds
+   private static final float INVINCIBILITY_FLASH_INTERVAL = 200; // Flash every 0.2 seconds
    
-   public Player(int x, int y, int playerWidth, int playerHeight,
-                 int screenHeight, boolean hasGun) {
+   public Player(int x, int y, int playerWidth, int playerHeight, int screenHeight, boolean hasGun) {
        super(x, y, playerWidth, playerHeight);
        this.SCREEN_HEIGHT = screenHeight;
        this.TOP_MARGIN = (int)(screenHeight * 0.1); // 10% from top
@@ -157,26 +162,46 @@ public class Player extends Rectangle {
    
    // Draws the player on the screen
    public void draw(Graphics g) {
-       BufferedImage currentImage;
-       
-       if (isFrozen) {
-           currentImage = playerImageFrozen;
-       } else {
-           currentImage = hasGun ? playerImageWithGun : playerImageNoGun;
-       }
-       
-       if (currentImage != null) {
-           // Draw the loaded image with custom width scaling
-           // Increase width to 1.5 times the original height
-           int scaledWidth = (int)(height);
-           int xOffset = (width - scaledWidth) / 2; // Center the image
-           g.drawImage(currentImage, x + xOffset, y, scaledWidth, height, null);
-       } else {
-           // Fallback to drawing a black rectangle if image fails
-           g.setColor(Color.BLACK);
-           g.fillRect(x, y, width, height);
-       }
-   }
+    // Only draw if not invincible or during the "visible" part of the flash
+    if (isInvincible && 
+        (System.currentTimeMillis() - invincibilityStartTime) / INVINCIBILITY_FLASH_INTERVAL % 2 == 0) {
+        return; // Skip drawing to create flashing effect
+    }
+
+    BufferedImage currentImage;
+    if (isFrozen) {
+        currentImage = playerImageFrozen;
+    } else {
+        currentImage = hasGun ? playerImageWithGun : playerImageNoGun;
+    }
+    
+    if (currentImage != null) {
+        int scaledWidth = (int)(height);
+        int xOffset = (width - scaledWidth) / 2;
+        g.drawImage(currentImage, x + xOffset, y, scaledWidth, height, null);
+    } else {
+        g.setColor(Color.BLACK);
+        g.fillRect(x, y, width, height);
+    }
+}
+   
+   // Make player invincible
+    public void makeInvincible() {
+    isInvincible = true;
+    invincibilityStartTime = System.currentTimeMillis();
+}
+
+public boolean isInvincible() {
+    if (!isInvincible) {
+        return false;
+    }
+    
+    if (System.currentTimeMillis() - invincibilityStartTime >= PLAYER_INVINCIBILITY_DURATION) {
+        isInvincible = false;
+        return false;
+    }
+    return true;
+}
 
    // Methods to handle activation of Freeze powerup
    public void freeze() {

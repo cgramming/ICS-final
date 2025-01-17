@@ -24,6 +24,8 @@ public class Obstacle {
     private int circleRadius; // Radius for collision detection
     private static final double COLLISION_RADIUS_MULTIPLIER = 0.45; // Aligned with Powerup class
     private Powerup powerup;
+    private Map<Point, Long> spawnTimes;
+    private static final long SPAWN_INVINCIBILITY_DURATION = 500; // 0.5 seconds
 
     public Obstacle(int gameWidth, int gameHeight, MapManager mapManager) {
         this.GAME_WIDTH = gameWidth;
@@ -32,6 +34,7 @@ public class Obstacle {
         this.random = new Random();
         this.obstaclePositions = new ArrayList<>();
         this.brokenObstacles = new HashMap<>();
+        this.spawnTimes = new HashMap<>();
         loadObstacleImage();
     }
 
@@ -64,7 +67,8 @@ public class Obstacle {
     }
 
     // Generates a specified number of obstacles    
-    private void generateObstacles(int count, ArrayList<Point> powerupPositions) {
+    // In Obstacle.java
+private void generateObstacles(int count, ArrayList<Point> powerupPositions) {
     int middleStart = GAME_WIDTH / 4;
     int middleWidth = GAME_WIDTH / 2;
     int topMargin = (int) (GAME_HEIGHT * 0.1);
@@ -82,11 +86,12 @@ public class Obstacle {
         if (!checkOverlap(newPoint, powerupPositions) && 
             !obstaclePositions.contains(newPoint)) {
             obstaclePositions.add(newPoint);
+            spawnTimes.put(newPoint, System.currentTimeMillis());
             successfulPlacements++;
-            }
-        totalAttempts++;
         }
+        totalAttempts++;
     }
+}
 
     // Get circle center point from obstacle position
     public Point getCircleCenter(Point obstaclePosition) {
