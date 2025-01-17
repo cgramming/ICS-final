@@ -76,6 +76,7 @@ public class PauseMenu extends JPanel {
         add(mainMenuButton);
         add(quitButton);
     }
+    //Creates a button template
     
     private JButton createButton(String text, int y) {
         JButton button = new JButton(text);
@@ -83,13 +84,14 @@ public class PauseMenu extends JPanel {
         button.setBounds((GamePanel.GAME_WIDTH - 200) / 2, y, 200, 50);
         return button;
     }
-    
+    //toggles pause on or off
     public void togglePause() {
         isPaused = !isPaused;
         setButtonsVisible(isPaused);
         gamePanel.setPaused(isPaused);
         repaint();
     }
+    //makes everything visable
     
     private void setButtonsVisible(boolean visible) {
         resumeButton.setVisible(visible);

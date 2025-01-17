@@ -51,6 +51,7 @@ public class EndScreen extends JPanel {
         add(quitButton);
     }
     
+    //Makes a template for a button
     private JButton createButton(String text, int y) {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 20));
@@ -58,12 +59,14 @@ public class EndScreen extends JPanel {
         return button;
     }
     
+    //Activates end screen
     public void showEndScreen(String winner) {
         this.winnerText = winner + " Wins!";
         setVisible(true);
         repaint();
     }
     
+    //Draws over the screen to show endScreen
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);

@@ -266,11 +266,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 firstPlayerHasShot = true;
                 firstShootingPlayer = shooter;
                 shooter.setHasGun(false);
-                
+                // Check if it is left or right player who shot
                 if (isLeftPlayer) {
                     cleanupBullet(bulletLeft);
                     isLeftPlayerShooting = true;
                     leftPlayerShootStartTime = System.currentTimeMillis();
+                    //create new bullet
                     bulletLeft = new Bullet(
                         shooter.x + shooter.width,
                         shooter.y + shooter.height/2,
@@ -282,6 +283,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     cleanupBullet(bulletRight);
                     isRightPlayerShooting = true;
                     rightPlayerShootStartTime = System.currentTimeMillis();
+                    //create new bullet for right
                     bulletRight = new Bullet(
                         shooter.x - bulletWidth,
                         shooter.y + shooter.height/2,
@@ -297,11 +299,12 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                 secondPlayerHasShot = true;
                 secondShootingPlayer = shooter;
                 shooter.setHasGun(false);
-                
+                //check if left or right payer
                 if (isLeftPlayer) {
                     cleanupBullet(bulletLeft);
                     isLeftPlayerShooting = true;
                     leftPlayerShootStartTime = System.currentTimeMillis();
+                    //creates a bullet
                     bulletLeft = new Bullet(
                         shooter.x + shooter.width,
                         shooter.y + shooter.height/2,
@@ -313,6 +316,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     cleanupBullet(bulletRight);
                     isRightPlayerShooting = true;
                     rightPlayerShootStartTime = System.currentTimeMillis();
+                    //creates a bulllet for right player
                     bulletRight = new Bullet(
                         shooter.x - bulletWidth,
                         shooter.y + shooter.height/2,
@@ -447,7 +451,7 @@ public class GamePanel extends JPanel implements Runnable, KeyListener {
                     currentBullet.getPreviousX() + currentBullet.width/2,
                     currentBullet.getPreviousY() + currentBullet.height/2
                 );
-
+                //Checks if powerup intersects with bullet
                 if (powerup.lineIntersectsCircle(powerupCenter, bulletPrevCenter, bulletCenter)) {
                     String powerupType = powerup.activatePowerup(powerupPosition, currentBullet, 
                         currentBullet.isFromLeftPlayer() ? playerRight : playerLeft);

@@ -65,6 +65,7 @@ public class Obstacle {
 
     // Generates a specified number of obstacles    
     private void generateObstacles(int count, ArrayList<Point> powerupPositions) {
+    //confines obstacle spawn to a space
     int middleStart = GAME_WIDTH / 4;
     int middleWidth = GAME_WIDTH / 2;
     int topMargin = (int) (GAME_HEIGHT * 0.1);
@@ -75,10 +76,11 @@ public class Obstacle {
     int totalAttempts = 0;
 
     while (successfulPlacements < count && totalAttempts < maxAttempts) {
+        //randomly places obstacles within margins
         int x = middleStart + random.nextInt(middleWidth - obstacleImage.getWidth());
         int y = topMargin + random.nextInt(usableHeight - obstacleImage.getHeight());
         Point newPoint = new Point(x, y);
-        
+        //does not place power up where there is already an obstacle
         if (!checkOverlap(newPoint, powerupPositions) && 
             !obstaclePositions.contains(newPoint)) {
             obstaclePositions.add(newPoint);

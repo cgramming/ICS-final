@@ -20,12 +20,14 @@ public class SoundManager {
     private Clip freezeSound;
     private Clip bigBulletSound;
 
+    //Constructor
     public SoundManager() {
         loadSounds();
     }
 
     private void loadSounds() {
         try {
+            //Loading all the music and sound effects
             backgroundMusic = loadClip("/audio/BackgroundMusic.wav", -30.0f);
             gameStartSound = loadClip("/audio/GameStart.wav", -10.0f);
             pausePlaySound = loadClip("/audio/PauseAndPlay.wav", -10.0f);
@@ -38,9 +40,10 @@ public class SoundManager {
             System.err.println("Error loading sounds: " + e.getMessage());
         }
     }
-
+    //A function to load up sounds from a given url
     private Clip loadClip(String soundFile, float volume) {
         try {
+            //loading clip
             URL soundURL = getClass().getResource(soundFile);
             if (soundURL == null) {
                 System.err.println("Sound file not found: " + soundFile);
@@ -56,21 +59,21 @@ public class SoundManager {
             return null;
         }
     }
-
+    //A function to set the voule
     private void setVolume(Clip clip, float volume) {
         if (clip != null) {
             FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
             gainControl.setValue(volume);
         }
     }
-
+    //A specific function to change background music volume
     public void adjustBackgroundMusicVolume(boolean isMainMenu) {
         if (backgroundMusic != null) {
             float volume = isMainMenu ? -30.0f : -40.0f;  // Louder on main menu
             setVolume(backgroundMusic, volume);
         }
     }
-
+    //Turning background music on or off
     public void playBackgroundMusic() {
         if (backgroundMusic != null) {
             backgroundMusic.loop(Clip.LOOP_CONTINUOUSLY);
